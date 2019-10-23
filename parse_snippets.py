@@ -1,6 +1,7 @@
 import extract_rtf
 import pprint
 import itertools
+import re
 #from frozendict import frozendict
 import glob
 
@@ -53,9 +54,9 @@ def parse_interviews():
         with open(inpath, 'r', encoding='latin1') as infile:
             doc = infile.read()
 
-        bookmarks, stripped_rtf = striprtf(doc)
+        bookmarks, stripped_rtf = extract_rtf.striprtf(doc)
 
-        overlaps = all_overlaps(bookmarks)
+        overlaps = extract_rtf.all_overlaps(bookmarks)
         snippets = set(Snippet.create(subject, x) for x in overlaps if Snippet.create(subject, x) is not None)
 
         all_snippets.extend(sorted(snippets))
