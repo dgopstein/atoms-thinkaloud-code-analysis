@@ -1,3 +1,4 @@
+%matplotlib inline
 import parse_snippets
 import pprint
 import numpy as np
@@ -7,9 +8,31 @@ from matplotlib import pyplot as plt
 plt.ion()
 
 pp = pprint.PrettyPrinter(indent=4)
+pprn = pp.pprint
 texts, bookmarks, snippets = parse_interviews()
+codes = [b for b in bookmarks if is_code(b)]
+overlaps = extract_rtf.all_overlaps(bookmarks)
 print() or pp.pprint(snippets)
+snippets[0].discussion_codes
 
+###############################################################################
+#    Participant Groups
+###############################################################################
+
+subject_groups = {4168: 'student',
+ 3316: 'student',
+ 4281: 'student',
+ 9112: 'student',
+ 3787: 'student',
+ 6061: 'user',
+ 8888: 'user',
+ 4304: 'user',
+ 1879: 'user',
+ 1157: 'librarian',
+ 7640: 'librarian',
+ 4642: 'librarian',
+ 8697: 'librarian',
+ 1867: 'librarian'}
 
 ###############################################################################
 #    Heatmap of Correctness vs Confidence
@@ -47,7 +70,7 @@ nyu_snippets
 ###############################################################################
 
 import csv
-with open('think_aloud_results.csv', "w") as csv_file:
+with open('tmp/think_aloud_results.csv', "w") as csv_file:
     writer = csv.writer(csv_file, delimiter=',')
     writer.writerow(['subject', 'start', 'end', 'snippet', 'atom', 'confusingness', 'answer', 'confidence'])
     for s in snippets:
@@ -60,3 +83,31 @@ with open('think_aloud_results.csv', "w") as csv_file:
 ###############################################################################
 
 pp.pprint(snippets[0].codes)
+
+
+###############################################################################
+#    All subjects' discussion questions
+###############################################################################
+
+def removekey(d, key):
+    r = dict(d)
+    if r.get(key):
+        del r[key]
+    return r
+
+disc_qs = [{**c, 'snippet': s.snippet} for s in snippets for c in s.discussion_codes if c['content'] == 'Discussion Question']
+
+disc_q_codes = []
+for q in disc_qs:
+    overlapping_codes = [code for code in codes if overlap_bkmk(code, q) > 0]
+    disc_q_codes.append({**removekey(q, 'text'), 'codes': [c['content'] for c in overlapping_codes]})
+
+disc_q_codes[0:2]
+
+flat_disc_q_codes = [c for cs in disc_q_codes for c in cs['codes']]
+
+plt.close()
+chart = sns.catplot(x="code", kind="count", palette="ch:.25", data=pd.DataFrame({'code':flat_disc_q_codes}))
+chart.set_xticklabels(rotation=45)
+
+

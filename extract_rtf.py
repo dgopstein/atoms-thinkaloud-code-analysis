@@ -10,22 +10,16 @@ Code created by Markus Jarderot: http://mizardx.blogspot.com
 
 import re
 
-#inpath = '/Users/dgopstein/nyu/confusion/think-aloud/qda_miner/4168 interview.RTF'
-#
-#with open(inpath, 'r', encoding='latin1') as infile:
-#    doc = infile.read()
+def bookmark_to_tuple(b):
+   return (b['start'], b['end'], b['content'])
 
-##################################
-#bookmarks, stripped_rtf = striprtf(doc[:14000])
-#print('stripped', stripped_rtf)
-#print()
-#for x in bookmarks:
-#   print('bookmarks', x)
-#for overlap in all_overlaps(bookmarks):
-#   print('overlap')
-#   for x in overlap:
-#      print('  ', x)
-##################################
+def tuple_to_bookmark(t):
+   return {'start': t[0], 'end': t[1], 'content': t[2]}
+
+def set_diff(a, b):
+   a_set = set(bookmark_to_tuple(x) for x in a)
+   b_set = set(bookmark_to_tuple(x) for x in b)
+   return [tuple_to_bookmark(x) for x in a_set.difference(b_set)]
 
 # Find every grouping of overlapped bookmarks
 def all_overlaps(unsorted_bookmarks):
@@ -49,17 +43,6 @@ def all_overlaps(unsorted_bookmarks):
          #if len(stack) > 1:
          overlaps.append(stack.copy())
 
-   def bookmark_to_tuple(b):
-      return (b['start'], b['end'], b['content'])
-
-   def tuple_to_bookmark(t):
-      return {'start': t[0], 'end': t[1], 'content': t[2]}
-
-   def set_diff(a, b):
-      a_set = set(bookmark_to_tuple(x) for x in a)
-      b_set = set(bookmark_to_tuple(x) for x in b)
-      return [tuple_to_bookmark(x) for x in a_set.difference(b_set)]
-
    # remove redundant overlaps created by several codes spanning
    # the same section appearing to be created in sequence
    #distinct_overlaps = [overlaps.pop(0)]
@@ -80,6 +63,12 @@ def all_overlaps(unsorted_bookmarks):
 
 def overlap(a, b):
    return min(a[1], b[1]) - max(a[0], b[0])
+
+def overlap_bkmk(a, b):
+   if a.get('subject') == b.get('subject'):
+      return min(a['end'], b['end']) - max(a['start'], b['start'])
+   else:
+      return -99999999
 
 def in_bookmark(idx_stack):
    return len(idx_stack) > 0 and idx_stack[-1]['word'] == 'bkmkstart'
@@ -180,6 +169,11 @@ def striprtf(text):
             # A bookmark is being terminated, figure out which one, and transfer it from the list of open bookmarks to the list of closed bookmarks, changing it's name to be more human readable in the process
             if current_bkmkend:
                 matching_starts = [bkmk for bkmk in idx_stack if bkmk['content'] == current_bkmkend]
+
+                # QDAminer has a bug where sometimes it leaves bkmkends without corresponding bkmkstarts. I don't fix that here, just print out debugging info on it.
+                if len(matching_starts) != 1:
+                    print("current_bkmkend", current_bkmkend)
+                    print("marching_starts", matching_starts)
 
                 assert len(matching_starts) == 1
                 matching_start = matching_starts[0]
