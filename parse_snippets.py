@@ -77,9 +77,10 @@ def parse_interviews():
     all_text = {}
 
     #inpath = '/Users/dgopstein/nyu/confusion/think-aloud/qda_miner/4281 interview.RTF'
+    glob.glob(interviews_glob)
+    glob.glob('transcripts/*')
+    glob.glob('*')
     for inpath in glob.glob(interviews_glob):
-        #print('inpath', inpath)
-
         subject = int(re.match('.*(\d{4})[-_ ]interview.RTF', inpath).group(1))
 
         print("subject", subject)
