@@ -67,6 +67,10 @@ class EvalSnippet(Snippet):
 
     def __repr__(self):
        return '%s <%d, %d> (%d - %s %s) [%s - %d]' % (self.subject, self.start, self.end, self.snippet, self.atom, self.confusingness, self.answer, self.confidence)
+   
+    def to_dict(self):
+        return {'subject': self.subject, 'start': self.start, 'end': self.end, 'snippet': self.snippet, 'atom': self.atom, 
+                'confusingness': self.confusingness, 'answer': self.answer, 'confidence': self.confidence, 'section': self.section}
 
 
 def parse_interviews():

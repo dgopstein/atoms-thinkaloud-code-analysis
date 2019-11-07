@@ -100,7 +100,6 @@ pp.pprint(snippets[0].codes)
 #%%############################################################################
 #    All subjects' discussion questions
 ###############################################################################
-#%%
 
 def removekey(d, key):
     r = dict(d)
@@ -123,11 +122,53 @@ disc_q_codes_frame = pd.DataFrame({'code':flat_disc_q_codes})
 
 plt.close()
 #chart = sns.catplot(x="code", kind="count", palette="ch:.25", data=disc_q_codes_frame)
+
+# discussion_question_codes.png
 chart = sns.countplot(x = 'code',
               data = disc_q_codes_frame,
               order = disc_q_codes_frame['code'].value_counts().index,
               orient = 'v')
 chart.set_xticklabels(chart.get_xticklabels(), rotation=90)
 plt.gcf().subplots_adjust(bottom=0.5)
+
+
+#%%############################################################################
+#    Correct / Incorrect answers by subject
+###############################################################################
+from statistics import mean
+
+snippets_df = pd.DataFrame([s.to_dict() for s in snippets])
+
+subject_groups_df = pd.DataFrame.from_dict({'subject': list(subject_groups.keys()), 'group': list(subject_groups.values())}).set_index('subject')
+
+snippets_df = snippets_df.join(subject_groups_df, on='subject')
+
+snippets_df = snippets_df.replace('Technically Right', 'Right')
+
+snippet_group_groups = snippets_df.groupby(['group', 'answer'], as_index=False).size().to_frame('size').reset_index()
+snippet_group_sums = snippet_group_groups.groupby(['group', 'answer']).agg({'size': 'sum'})
+snippet_group_rates = snippet_group_sums.groupby(level=0).apply(lambda x: x / float(x.sum()))
+
+
+
+#%% Pandas plot
+snippet_group_unstacked = snippet_group_rates.unstack()
+snippet_group_unstacked.columns = pd.CategoricalIndex(snippet_group_unstacked.columns.values, 
+                                  ordered=True, 
+                                  categories=[('size', 'Wrong'), ('size', 'Right')])
+
+print(snippet_group_unstacked)
+snippet_group_unstacked = snippet_group_unstacked.sort_index(axis=1)
+
+print(snippet_group_unstacked.index)
+
+snippet_group_unstacked = snippet_group_unstacked.reindex(['student', 'user', 'librarian'])
+snippet_group_unstacked.plot(kind='bar', stacked=True, color=['orange', 'darkgray'], figsize=(5,6))
+
+plt.savefig('img/group_error_rates.pdf')
+
+#%% Seaborn plot
+
+
 
 
