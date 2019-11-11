@@ -46,6 +46,17 @@ subject_groups = {4168: 'student',
  1867: 'librarian'}
 
 #%%############################################################################
+#    Parse survey data
+###############################################################################
+
+survey_df = pd.read_csv('survey/Think Aloud Survey Results - Survey.csv')
+survey_langs_df = pd.read_csv('survey/Think Aloud Survey Results - Languages.csv')
+
+survey_first_lang_df = survey_langs_df.loc[survey_langs_df.groupby('Subject')['Learned Year'].idxmin()]
+survey_first_lang_df.set_index('Subject')
+
+
+#%%############################################################################
 #    Heatmap of Correctness vs Confidence
 ###############################################################################
 X = np.linspace(0, 1, 2)
@@ -133,7 +144,7 @@ plt.gcf().subplots_adjust(bottom=0.5)
 
 
 #%%############################################################################
-#    Correct / Incorrect answers by subject
+#    Correct / Incorrect answers by experience group
 ###############################################################################
 from statistics import mean
 
@@ -163,12 +174,53 @@ snippet_group_unstacked = snippet_group_unstacked.sort_index(axis=1)
 print(snippet_group_unstacked.index)
 
 snippet_group_unstacked = snippet_group_unstacked.reindex(['student', 'user', 'librarian'])
+plt.close()
 snippet_group_unstacked.plot(kind='bar', stacked=True, color=['orange', 'darkgray'], figsize=(5,6))
 
 plt.savefig('img/group_error_rates.pdf')
 
-#%% Seaborn plot
+#%%############################################################################
+#    Error rates by experience years
+###############################################################################
+
+subject_answer_sums_df = snippets_df[snippets_df['answer'] != 'Wrong'].groupby('subject')['answer'].count().reset_index()
+
+years_answers_df = subject_answer_sums_df.join(survey_first_lang_df[['Subject', 'Learned Year']].set_index('Subject'), on='subject')
+
+years_answers_df['years_experience'] = years_answers_df.apply(lambda row: 2019-row['Learned Year'], axis=1)
+
+plt.close()
+sns.set(rc={'figure.figsize':(5,5)})
+years_vs_correctness_plot = sns.scatterplot(x='years_experience', y='answer', data=years_answers_df, s = 70)
+years_vs_correctness_plot.set(ylim=(0,8.5),
+                              xlabel="Years Programming", ylabel="Correct Answers")
+plt.savefig('img/years_vs_correctness.pdf')
+
+#%%############################################################################
+#    All unique codes
+###############################################################################
+
+from collections import Counter
+
+pprn(Counter([c['content'] for c in codes]))
+
+#%%############################################################################
+#    Causes of Confusion
+###############################################################################
 
 
+causes_confusion = [c for c in codes if c['content'] == 'Causes of Confusion']
 
+pprn(causes_confusion)
 
+non_student_wrong_answers = [s for s in snippets if s.answer == 'Wrong' and subject_groups[s.subject] != 'student']
+
+pprn(non_student_wrong_answers)
+
+# The only wrong answer from a librarian was on snippet #115 (users got wrong 61 and 79)
+# Find corresponding wrongs among students
+matching_student_wrong_answers = [s for s in snippets if s.answer == 'Wrong' and subject_groups[s.subject] == 'student' and s.snippet in [115, 61, 79]]
+
+pprn(matching_student_wrong_answers)
+
+[s for s in snippets if s.answer == 'Wrong' and s.subject == 9112]
