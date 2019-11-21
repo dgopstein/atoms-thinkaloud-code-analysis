@@ -164,8 +164,8 @@ snippet_group_rates = snippet_group_sums.groupby(level=0).apply(lambda x: x / fl
 
 #%% Pandas plot
 snippet_group_unstacked = snippet_group_rates.unstack()
-snippet_group_unstacked.columns = pd.CategoricalIndex(snippet_group_unstacked.columns.values, 
-                                  ordered=True, 
+snippet_group_unstacked.columns = pd.CategoricalIndex(snippet_group_unstacked.columns.values,
+                                  ordered=True,
                                   categories=[('size', 'Wrong'), ('size', 'Right')])
 
 print(snippet_group_unstacked)
@@ -183,7 +183,9 @@ plt.savefig('img/group_error_rates.pdf')
 #    Error rates by experience years
 ###############################################################################
 
-subject_answer_sums_df = snippets_df[snippets_df['answer'] != 'Wrong'].groupby('subject')['answer'].count().reset_index()
+right_snippets_df = snippets_df[snippets_df['answer'] != 'Wrong']
+
+subject_answer_sums_df = right_snippets_df.groupby('subject')['answer'].count().reset_index()
 
 years_answers_df = subject_answer_sums_df.join(survey_first_lang_df[['Subject', 'Learned Year']].set_index('Subject'), on='subject')
 
@@ -223,4 +225,23 @@ matching_student_wrong_answers = [s for s in snippets if s.answer == 'Wrong' and
 
 pprn(matching_student_wrong_answers)
 
-[s for s in snippets if s.answer == 'Wrong' and s.subject == 9112]
+wrong_snippets = [s for s in snippets if s.answer == 'Wrong']
+
+pprn(wrong_snippets)
+
+#%%############################################################################
+#    Which questions were most confusing
+###############################################################################
+
+snippets_answer_sums = snippets_df.groupby(['snippet', 'answer'])
+snippets_answer_sums.agg({'size': 'sum'})
+snippet_group_rates = snippets_answer_sums.groupby(level=0).apply(lambda x: x / float(x.sum()))
+
+snippet_answer_groups = snippets_df.groupby(['snippet', 'answer'], as_index=False).size().to_frame('size').reset_index()
+snippet_answer_sums = snippet_answer_groups.groupby(['snippet', 'answer']).agg({'size': 'sum'})
+snippet_answer_rates = snippet_answer_sums.groupby(level=0).apply(lambda x: x / float(x.sum()))
+
+snippet_answer_rates.reset_index(inplace=True)
+snippet_correct_rates = snippet_answer_rates[snippet_answer_rates['answer'] == 'Right']
+
+snippet_correct_rates.sort_values(by='size')
