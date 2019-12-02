@@ -82,6 +82,13 @@ atom_type_array = [
 
 atom_type_df = pd.DataFrame(atom_type_array, columns=['atom', 'confusingness', 'qid'])
 
+#post-increment obfuscated rates ((0.5833333 + 0.5306122 + 0.5102041) / 3)
+#pre-increment obfuscated rates ((0.6041667 + 0.7551020 + 0.5510204) / 3)
+
+ (0.9166667 + 0.9183673 + 0.8163265) / 3
+ (0.7500000 + 0.8367347 + 0.8163265) / 3
+
+#snippet_effectsize_df[snippet_effectsize_df['qid'] & [19, 21, 23]]
 
 snippet_effectsize_array = [
     [1,  0.32274861, 0.8958333, 1.0000000],
@@ -371,3 +378,28 @@ pprn(op_prec_right_wrong_reason)
 
 
 
+#%%############################################################################
+#    Find every "caught own mistake", ignoring "before" or "after"
+###############################################################################
+
+def text_context(subject, n_context, code):
+    start = code['start']
+    end = code['end']
+    return texts[subject][start-n_context:start] + \
+           "\nvvvvvvvvvvv\n" + \
+           texts[subject][start:end] + \
+           "\n^^^^^^^^^^^\n" + \
+           texts[subject][end:end+n_context]
+
+caught_own_mistakes = [{'snippet': s, 'code': c} for s in snippets for c in
+                       [{**x, 'section': 'Evaluation'} for x in s.codes] +
+                       [{**x, 'section': 'Discussion'} for x in s.discussion_codes
+                       ] if c['content'] == 'Caught Own Mistake Before Prompted' or c['content'] == 'Caught Own Mistake After Prompted' ]
+
+for sc in caught_own_mistakes:
+    s = sc['snippet']
+    c = sc['code']
+    print("\n\n-----------------")
+    print(s.subject, s.snippet, c['section'])
+    print("-----------------")
+    print(text_context(s.subject, 200, c))
