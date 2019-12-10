@@ -45,6 +45,8 @@ subject_groups = {4168: 'student',
  8697: 'librarian',
  1867: 'librarian'}
 
+subject_groups_df = pd.DataFrame.from_dict({'subject': list(subject_groups.keys()), 'group': list(subject_groups.values())}).set_index('subject')
+
 #%%############################################################################
 #    Atoms Types
 ###############################################################################
@@ -159,10 +161,18 @@ snippet_old_correct_rates_df = snippet_effectsize_df[['qid', 'C-rate']].rename(c
 ###############################################################################
 
 survey_df = pd.read_csv('survey/Think Aloud Survey Results - Survey.csv')
+survey_df.set_index('Subject', inplace=True)
+
+
 survey_langs_df = pd.read_csv('survey/Think Aloud Survey Results - Languages.csv')
 
 survey_first_lang_df = survey_langs_df.loc[survey_langs_df.groupby('Subject')['Learned Year'].idxmin()]
-survey_first_lang_df.set_index('Subject')
+survey_first_lang_df['Years Programming'] = survey_first_lang_df.apply(lambda row: 2019-row['Learned Year'], axis=1)
+survey_first_lang_df.set_index('Subject', inplace=True)
+survey_first_lang_df
+
+survey_df = survey_df.join(survey_first_lang_df['Years Programming'])
+
 
 
 #%%############################################################################
@@ -193,8 +203,6 @@ hm.invert_yaxis()
 ###############################################################################
 
 nyu_snippets = [x for x in snippets if x.subject in set([4168, 3316, 4281, 9112, 3787])]
-
-nyu_snippets
 
 #%%############################################################################
 #    CSV
@@ -258,8 +266,8 @@ plt.gcf().subplots_adjust(bottom=0.5)
 from statistics import mean
 
 snippets_df = pd.DataFrame([s.to_dict() for s in snippets])
-
-subject_groups_df = pd.DataFrame.from_dict({'subject': list(subject_groups.keys()), 'group': list(subject_groups.values())}).set_index('subject')
+pd.set_option('display.max_rows', 500)
+print(snippets_df[['subject', 'snippet', 'answer']])
 
 snippets_df = snippets_df.join(subject_groups_df, on='subject')
 
@@ -304,10 +312,25 @@ years_answers_df['subject_group'] = years_answers_df['subject'].map(subject_grou
 
 plt.close()
 sns.set(rc={'figure.figsize':(5,5)})
-years_vs_correctness_plot = sns.scatterplot(x='years_experience', y='answer', hue='subject_group', data=years_answers_df, s = 70)
+years_vs_correctness_plot = sns.scatterplot(x='years_experience', y='answer', hue='subject_group', data=years_answers_df, s = 400)
 years_vs_correctness_plot.set(ylim=(0,8.5),
                               xlabel="Years Programming", ylabel="Correct Answers")
 plt.legend(loc='lower right')
+
+for idx in range(0,len(years_answers_df)):
+    x, y, text = years_answers_df[['years_experience', 'answer', 'subject']].iloc[idx]
+    text = int(text)
+
+    offsets = {
+        4168: -.8,
+        7640: .8,
+        6061: -.3,
+        8888: .2}
+
+    x += offsets.get(text, 0)
+
+    years_vs_correctness_plot.text(x, y, text, size=7, color='black', weight='semibold', horizontalalignment='center', verticalalignment='center')
+
 plt.savefig('img/years_vs_correctness.pdf')
 
 #%%############################################################################
@@ -391,15 +414,66 @@ def text_context(subject, n_context, code):
            "\n^^^^^^^^^^^\n" + \
            texts[subject][end:end+n_context]
 
-caught_own_mistakes = [{'snippet': s, 'code': c} for s in snippets for c in
-                       [{**x, 'section': 'Evaluation'} for x in s.codes] +
-                       [{**x, 'section': 'Discussion'} for x in s.discussion_codes
-                       ] if c['content'] == 'Caught Own Mistake Before Prompted' or c['content'] == 'Caught Own Mistake After Prompted' ]
+def find_snippets_by_codes(snippets, code_names):
+    return [{'snippet': s, 'code': c} for s in snippets for c in
+            [{**x, 'section': 'Evaluation'} for x in s.codes] +
+            [{**x, 'section': 'Discussion'} for x in s.discussion_codes
+            ] if c['content'] in code_names]
 
-for sc in caught_own_mistakes:
-    s = sc['snippet']
-    c = sc['code']
-    print("\n\n-----------------")
-    print(s.subject, s.snippet, c['section'])
-    print("-----------------")
-    print(text_context(s.subject, 200, c))
+def print_code_snippets(code_snippets, context=200):
+    for sc in code_snippets:
+        s = sc['snippet']
+        c = sc['code']
+        print("\n\n-----------------")
+        print(s.subject, s.snippet, c['section'], s.answer, subject_groups[s.subject])
+        print("-----------------")
+        print(text_context(s.subject, context, c))
+
+caught_own_mistakes = find_snippets_by_codes(snippets, ['Caught Own Mistake Before Prompted', 'Caught Own Mistake After Prompted'])
+
+print_code_snippets(caught_own_mistakes)
+
+
+#%%############################################################################
+#    Participants table
+###############################################################################
+
+#pd.set_option('display.max_columns', None)
+pd.set_option('display.width', 200)
+print(survey_df[['Age', 'Preferred Language', 'Proficiency C/C++', 'Years Programming']].join(subject_groups_df).to_csv())
+
+#%%############################################################################
+#    Find every "correct for wrong reason"
+###############################################################################
+
+correct_for_wrong_reasons = find_snippets_by_codes(snippets, ['Correct for Wrong Reasons'])
+
+print_code_snippets(correct_for_wrong_reasons)
+
+#%%############################################################################
+#    Code rates for different experience groups
+###############################################################################
+
+codes_df = pd.DataFrame([{**c, 'snippet': s.snippet, 'atom': s.atom,
+               'answer': s.answer, 'confidence': s.confidence} for s in snippets for c in
+              [{**x, 'section': 'Evaluation'} for x in s.codes] +
+              [{**x, 'section': 'Discussion'} for x in s.discussion_codes]])
+
+codes_df = codes_df.join(subject_groups_df, on='subject')
+codes_df.rename(columns={'content': 'code', 'group': 'subject_group'}, inplace=True)
+
+print(codes_df.groupby(['subject_group', 'code']).size().sort_values(ascending=False).to_csv())
+
+codes_students_df = codes_df[codes_df['subject_group']=='student']
+codes_professionals_df = codes_df[codes_df['subject_group']!='student']
+
+
+codes_students_df.groupby(['code']).size().sort_values(ascending=False)
+print(codes_professionals_df.groupby(['code']).size().sort_values(ascending=False).to_csv())
+
+
+paranoia = find_snippets_by_codes(snippets, ['Paranoia'])
+
+len(paranoia)
+
+print_code_snippets(paranoia)
