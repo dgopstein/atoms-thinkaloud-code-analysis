@@ -1,6 +1,5 @@
 import os, sys
 
-
 #abspath = os.path.abspath(__file__)
 #dname = os.path.dirname(abspath)
 dname = '/Users/dgopstein/nyu/confusion/think-aloud/code_analysis'
@@ -13,7 +12,13 @@ import pprint
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib as mpl
 from matplotlib import pyplot as plt
+import collections
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+import math
+
 
 
 plt.ion()
@@ -477,3 +482,60 @@ paranoia = find_snippets_by_codes(snippets, ['Paranoia'])
 len(paranoia)
 
 print_code_snippets(paranoia)
+
+judgement = find_snippets_by_codes(snippets, ['Snippet Value Judgement', 'Would Have Written it Differently', 'Code Review'])
+
+print_code_snippets(judgement)
+
+judgement_counts = collections.Counter([x['snippet'].subject for x in judgement])
+
+set(subject_groups.keys()) - set(judgement_counts.keys())
+
+judgement_counts_df = pd.DataFrame.from_dict(judgement_counts, columns=['n_judgements'], orient='index')
+judgement_counts_df.index.name = 'subject'
+
+judgement_years_df = judgement_counts_df.join(years_answers_df[['subject', 'answer', 'years_experience', 'subject_group']].set_index('subject'))
+judgement_years_df
+
+student_colors
+mpl.cm.get_cmap('viridis')
+judgement_years_df['subject_group_cvals'] = judgement_years_df['subject_group'].map(lambda sg: {'student': 0, 'user': 127, 'librarian': 255}[sg])
+
+mkr_dict = {'student': 'o', 'user': '1', 'librarian': 's'}
+judgement_years_df['subject_group_markers'] = judgement_years_df['subject_group'].map(lambda sg: mkr_dict[sg])
+
+plt.close()
+#judgement_vs_years_plot = judgement_years_df.plot.scatter(x='years_experience', y='n_judgements', c='answer', colormap='plasma_r', s=100)
+#judgement_vs_years_plot = judgement_years_df.plot.scatter(x='years_experience', y='n_judgements', c='subject_group_cvals', colormap='plasma_r', s=100)
+#judgement_years_df.plot.scatter(x='answer', y='n_judgements')
+
+for kind in mkr_dict:
+    d = judgement_years_df[judgement_years_df['subject_group']==kind]
+    judgement_vs_years_plot = plt.scatter(d['years_experience'], d['n_judgements'],
+                s = 100,
+                c = mpl.cm.get_cmap('plasma_r')(50*(d['answer']-3)),
+                marker = mkr_dict[kind])
+plt.xlabel("Years Experience")
+plt.ylabel("Judgy Comments")
+plt.show()
+
+
+
+judgement_years_df.corr()
+judgement_years_df
+model = ols('n_judgements ~ years_experience + answer', data=judgement_years_df).fit()
+predictions = model.predict(judgement_years_df) # make the predictions by the model
+
+judgement_prediction_df = judgement_counts_df.join(pd.DataFrame(predictions, columns=['predicted']))
+
+judgement_prediction_plot = judgement_prediction_df.plot.scatter(y='n_judgements', x='predicted')
+judgement_prediction_plot.set(ylim=[0,14], xlim=[0,14], ylabel="Judgy Comments", xlabel="~ Years Experience + Answer Correctness")
+judgement_prediction_plot.plot([-1, 15], [-1, 15], marker = 'o')
+plt.savefig('img/judgement_prediction.pdf')
+
+judgement_prediction_df.corr()
+
+# Print out the statistics
+model.summary()
+
+sm.graphics.plot_partregress_grid(model)
