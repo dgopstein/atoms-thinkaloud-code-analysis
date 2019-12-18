@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, io
 
 #abspath = os.path.abspath(__file__)
 #dname = os.path.dirname(abspath)
@@ -539,3 +539,72 @@ judgement_prediction_df.corr()
 model.summary()
 
 sm.graphics.plot_partregress_grid(model)
+
+#%%############################################################################
+#    Confidence vs Correctness by Atom
+###############################################################################
+atom_snippets_df = snippets_df[snippets_df['confusingness'] == 'Atom']
+snippet_confidence_df = pd.DataFrame(atom_snippets_df)
+snippet_confidence_df['snippet_cat'] = snippet_confidence_df['snippet'].map(str)
+snippet_confidence_df['answer_size'] = snippet_confidence_df['answer'].map(lambda x: 50 if x == 'Right' else 120)
+
+conf_colors = {'Wrong': mpl.cm.get_cmap('plasma')(20), 'Right': mpl.cm.get_cmap('plasma')(120)}
+
+snippet_confidence_df['answer_color'] = snippet_confidence_df['answer'].map(lambda x: conf_colors[x])
+snippet_confidence_df
+#confidence_correctness_plot = sns.scatterplot(x='snippet', y='confidence', hue='answer', data=snippet_confidence_df, s = 'answer_size', x_jitter=.2)
+
+plt.close()
+for kind in ('Wrong', 'Right'):
+    d = snippet_confidence_df[snippet_confidence_df['answer']==kind]
+    confidence_correctness_plot = plt.scatter(d['snippet_cat'], d['confidence'],
+                s = d['answer_size'],
+                c = d['answer_color'])
+plt.show()
+
+snippets_df[snippets_df['answer']=='Wrong'].groupby(['snippet', 'confidence']).size()
+
+
+
+
+dispersion_2016_df = pd.read_csv('snippet-study-dispersion.csv')
+dispersion_2016_df.set_index('Subject', inplace=True)
+
+dispersion_2016_df
+snippets_df.join(dispersion_2016_df.reindex(['CodeID']), on='snippet')
+
+dispersion_2016_df.keys()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#%%############################################################################
+#    Confidence vs Experience
+###############################################################################
+
+experience_confidence_df = atom_snippets_df[['subject', 'atom', 'confusingness', 'answer', 'confidence']].join(survey_df[['Years Programming']], on='subject')
+
+#cmap = sns.cubehelix_palette(as_cmap=True, dark=0, light=1, reverse=True)
+#experience_confidence_plot = sns.kdeplot(experience_confidence_df['Years Programming'], experience_confidence_df['confidence'], cmap=cmap, n_levels=60, shade=True)
+#with sns.axes_style("white"):
+#    experience_confidence_plot = sns.jointplot(experience_confidence_df['Years Programming'], experience_confidence_df['confidence'], kind='hex')
+#plt.hist2d(experience_confidence_df['Years Programming'], experience_confidence_df['confidence'], bins=(6,5), cmap=plt.cm.jet)
+plt.close()
+#experience_confidence_plot = sns.scatterplot(x='Years Programming', y='confidence', hue='answer', s=70, data=experience_confidence_df)
+plt.show()
+
+snippets_df[snippets_df['confusingness'] == 'Transformation'].groupby('confidence').size()
