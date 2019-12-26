@@ -1,4 +1,4 @@
-import os, sys, io
+import os, sys
 
 #abspath = os.path.abspath(__file__)
 #dname = os.path.dirname(abspath)
@@ -6,10 +6,12 @@ dname = '/Users/dgopstein/nyu/confusion/think-aloud/code_analysis'
 os.chdir(dname)
 sys.path.insert(0, dname)
 
+import io
 import parse_snippets
 import extract_rtf
 import pprint
 import numpy as np
+import scipy
 import pandas as pd
 import seaborn as sns
 import matplotlib as mpl
@@ -275,6 +277,7 @@ pd.set_option('display.max_rows', 500)
 print(snippets_df[['subject', 'snippet', 'answer']])
 
 snippets_df = snippets_df.join(subject_groups_df, on='subject')
+snippets_df['group'] = snippets_df['group'].astype("category").cat.reorder_categories(['student', 'user', 'librarian'])
 
 snippets_df = snippets_df.replace('Technically Right', 'Right')
 
@@ -543,7 +546,8 @@ sm.graphics.plot_partregress_grid(model)
 #%%############################################################################
 #    Confidence vs Correctness by Atom
 ###############################################################################
-atom_snippets_df = snippets_df[snippets_df['confusingness'] == 'Atom']
+nc_snippets_df = snippets_df[snippets_df['confusingness'] != 'Atom']
+c_snippets_df = atom_snippets_df = snippets_df[snippets_df['confusingness'] == 'Atom']
 snippet_confidence_df = pd.DataFrame(atom_snippets_df)
 snippet_confidence_df['snippet_cat'] = snippet_confidence_df['snippet'].map(str)
 snippet_confidence_df['answer_size'] = snippet_confidence_df['answer'].map(lambda x: 50 if x == 'Right' else 120)
@@ -554,6 +558,11 @@ snippet_confidence_df['answer_color'] = snippet_confidence_df['answer'].map(lamb
 snippet_confidence_df
 #confidence_correctness_plot = sns.scatterplot(x='snippet', y='confidence', hue='answer', data=snippet_confidence_df, s = 'answer_size', x_jitter=.2)
 
+c_snippets_df.groupby(['answer', 'confidence']).size()
+nc_snippets_df.groupby(['answer', 'confidence']).size()
+# finding: all NC snippets were full-confidence and correct
+
+
 plt.close()
 for kind in ('Wrong', 'Right'):
     d = snippet_confidence_df[snippet_confidence_df['answer']==kind]
@@ -563,28 +572,53 @@ for kind in ('Wrong', 'Right'):
 plt.show()
 
 snippets_df[snippets_df['answer']=='Wrong'].groupby(['snippet', 'confidence']).size()
+snippets_df[snippets_df['answer']=='Right'].groupby(['snippet', 'confidence']).size()
+
+snippets_df.groupby(['answer', 'confidence']).size()
+
+right_snippets_df = snippets_df[snippets_df['answer']!='Wrong']
+wrong_snippets_df = snippets_df[snippets_df['answer']=='Wrong']
+wrong_snippets_df['group']
+wrong_snippets_df[['snippet', 'group', 'confidence']].sort_values('snippet')
+# finding: every professional error had confidence 5
+# finding: 3/4 of answers to #79 were wrong
+
+plt.close()
+right_wrong_conf_fig, axs = plt.subplots(ncols=2, figsize=(6,3))
+right_wrong_conf_fig.subplots_adjust(top=0.8)
+right_conf_plot = sns.countplot(x='confidence', hue='group', data=right_snippets_df, ax=axs[0], order=[1,2,3,4,5,6], hue_order=['student', 'user', 'librarian'])
+right_conf_plot.set(ylim=(0,29))
+right_conf_plot.set_title('Correct Answers')
+right_conf_plot.legend(loc='upper left')
+wrong_conf_plot = sns.countplot(x='confidence', hue='group', data=wrong_snippets_df, ax=axs[1], order=[1,2,3,4,5,6], hue_order=['student', 'user', 'librarian'])
+wrong_conf_plot.set(ylim=(0,29))
+wrong_conf_plot.set_title('Incorrect Answers')
+wrong_conf_plot.set_ylabel('')
+wrong_conf_plot.legend_.remove()
+right_wrong_conf_fig.suptitle('Confidence of Answers', fontsize=16)
+
+#right_conf_plot.grid(b=True, which='major', color='w', linewidth=1)
+
+# draw group separator ticks at bottom
+for i in range(6):
+    right_conf_plot.axvline(i+0.5, ymax=1, color="white")
+    wrong_conf_plot.axvline(i+0.5, ymax=1, color="white")
+
+plt.show()
+plt.savefig('img/right_wrong_conf.pdf')
+
+#%%############################################################################
+#    Correctness vs confidence by snippet
+###############################################################################
 
 
+confidence_correctness_agg_df = snippet_confidence_df.groupby(['snippet']).agg({'confidence':'mean', 'answer':lambda x: x.value_counts()['Right']/len(x)})
 
+plt.close()
+confidence_correctness_agg_plot = sns.scatterplot(x='confidence', y='answer', data=confidence_correctness_agg_df)
+plt.show()
 
-dispersion_2016_df = pd.read_csv('snippet-study-dispersion.csv')
-dispersion_2016_df.set_index('Subject', inplace=True)
-
-dispersion_2016_df
-snippets_df.join(dispersion_2016_df.reindex(['CodeID']), on='snippet')
-
-dispersion_2016_df.keys()
-
-
-
-
-
-
-
-
-
-
-
+snippets_df[snippets_df['snippet']==79]
 
 
 
@@ -608,3 +642,47 @@ plt.close()
 plt.show()
 
 snippets_df[snippets_df['confusingness'] == 'Transformation'].groupby('confidence').size()
+
+#%%############################################################################
+#    Dispersion vs confidence
+###############################################################################
+
+dispersion_2016_df = pd.read_csv('snippet-study-dispersion.csv').set_index('snippet')
+
+snippet_dispersion_df = atom_snippets_df.join(dispersion_2016_df, on='snippet')
+
+
+plt.close()
+snippet_dispersion_plot = sns.scatterplot(x='entropy', y='confidence', hue='answer', s=70, data=snippet_dispersion_df)
+sns.scatterplot(x='entropy', y='confidence', s=120, data=snippet_dispersion_df[snippet_dispersion_df['answer']=='Wrong'])
+plt.show()
+
+plt.hist2d(x='entropy', y='confidence', data=snippet_dispersion_df, bins=(6,5), cmap=plt.cm.jet)
+snippet_dispersion_df[['entropy', 'answer', 'confidence']]
+judgement_prediction_df.corr()
+
+
+snippet_dispersion_df['high_entropy'] = snippet_dispersion_df['entropy'].map(lambda x: x >= 1)
+
+wrong_snippet_dispersion_df = snippet_dispersion_df[snippet_dispersion_df['answer']=='Wrong']
+
+wrong_snippet_dispersion_df[['confidence', 'high_entropy']].groupby('high_entropy').agg('mean')
+
+scipy.stats.ttest_ind(wrong_snippet_dispersion_df[wrong_snippet_dispersion_df['high_entropy']==True]['confidence'], wrong_snippet_dispersion_df[wrong_snippet_dispersion_df['high_entropy']==False]['confidence'])
+
+wrong_snippet_dispersion_df['snippet_str'] = pd.Categorical(wrong_snippet_dispersion_df['snippet'].map(lambda s: 'q'+str(int(s))))
+
+plt.close()
+wrong_snippet_dispersion_plot = sns.scatterplot(x='entropy', y='confidence', hue='snippet_str', s=70, data=wrong_snippet_dispersion_df)
+wrong_snippet_dispersion_plot.legend_.remove()
+for idx in range(0,len(wrong_snippet_dispersion_df)):
+    x, y, text = wrong_snippet_dispersion_df[['entropy', 'confidence', 'snippet_str']].iloc[idx]
+    wrong_snippet_dispersion_plot.text(x+.05, y+.2, text, size=5, color='black', weight='semibold', horizontalalignment='center', verticalalignment='center')
+plt.show()
+
+
+#%%############################################################################
+#    Correctness vs confidence
+###############################################################################
+
+
