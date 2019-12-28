@@ -1,3 +1,4 @@
+import lib
 import extract_rtf
 import pprint
 import itertools
@@ -15,8 +16,8 @@ class Snippet:
     SECTION_PAT = 'Section - (.*)'
 
     def find_content(regex, overlap):
-        element = next(x for x in overlap if re.match(regex, x['content']))
-        match = re.match(regex, element['content'])
+        element = next(x for x in overlap if re.match(regex, x['codename']))
+        match = re.match(regex, element['codename'])
         return {'start': element['start'], 'end': element['end'], 'match': match.group(1)}
 
     def create(subject, overlap):
@@ -94,6 +95,7 @@ def parse_interviews():
 
         bookmarks, stripped_rtf = extract_rtf.striprtf(doc)
 
+        bookmarks = [lib.bkmk_to_code(b) for b in bookmarks]
         for b in bookmarks:
             b['subject'] = subject
 
@@ -116,7 +118,7 @@ def parse_interviews():
 
 # filter out the bookmarks that describe snippets and sections
 def is_code(b):
-    return not re.match('|'.join([Snippet.SNIPPET_PAT, Snippet.ANSWER_PAT, Snippet.CONFUSINGNESS_PAT, Snippet.CONFIDENCE_PAT, Snippet.ATOM_PAT, Snippet.SECTION_PAT]), b['content'])
+    return not re.match('|'.join([Snippet.SNIPPET_PAT, Snippet.ANSWER_PAT, Snippet.CONFUSINGNESS_PAT, Snippet.CONFIDENCE_PAT, Snippet.ATOM_PAT, Snippet.SECTION_PAT]), b['codename'])
 
 def add_codes_to_snippets(snippets, bookmarks, text):
     snippet_intervals = [Interval(s.start, s.end, s) for s in snippets]

@@ -6,9 +6,10 @@ dname = '/Users/dgopstein/nyu/confusion/think-aloud/code_analysis'
 os.chdir(dname)
 sys.path.insert(0, dname)
 
-import io
 import parse_snippets
 import extract_rtf
+import lib
+import io
 import pprint
 import numpy as np
 import scipy
@@ -21,7 +22,13 @@ import statsmodels.api as sm
 from statsmodels.formula.api import ols
 import math
 
+#%%############################################################################
+#    Library
+###############################################################################
 
+#%%############################################################################
+#    Initialization
+###############################################################################
 
 plt.ion()
 pp = pprint.PrettyPrinter(indent=4)
@@ -29,9 +36,9 @@ pprn = pp.pprint
 
 texts, bookmarks, snippets = parse_snippets.parse_interviews()
 codes = [b for b in bookmarks if parse_snippets.is_code(b)]
+#overlaps = [[lib.bkmk_to_code(b) for b in overlap] for overlap in extract_rtf.all_overlaps(bookmarks)]
 overlaps = extract_rtf.all_overlaps(bookmarks)
 print() or pp.pprint(snippets)
-snippets[0].discussion_codes
 
 #%%############################################################################
 #    Participant Groups
@@ -94,8 +101,8 @@ atom_type_df = pd.DataFrame(atom_type_array, columns=['atom', 'confusingness', '
 #post-increment obfuscated rates ((0.5833333 + 0.5306122 + 0.5102041) / 3)
 #pre-increment obfuscated rates ((0.6041667 + 0.7551020 + 0.5510204) / 3)
 
- (0.9166667 + 0.9183673 + 0.8163265) / 3
- (0.7500000 + 0.8367347 + 0.8163265) / 3
+# (0.9166667 + 0.9183673 + 0.8163265) / 3
+# (0.7500000 + 0.8367347 + 0.8163265) / 3
 
 #snippet_effectsize_df[snippet_effectsize_df['qid'] & [19, 21, 23]]
 
@@ -236,18 +243,12 @@ pp.pprint(snippets[0].codes)
 #    All subjects' discussion questions
 ###############################################################################
 
-def removekey(d, key):
-    r = dict(d)
-    if r.get(key):
-        del r[key]
-    return r
-
-disc_qs = [{**c, 'snippet': s.snippet} for s in snippets for c in s.discussion_codes if c['content'] == 'Discussion Question']
+disc_qs = [{**c, 'snippet': s.snippet} for s in snippets for c in s.discussion_codes if c['codename'] == 'Discussion Question']
 
 disc_q_codes = []
 for q in disc_qs:
     overlapping_codes = [code for code in codes if extract_rtf.overlap_bkmk(code, q) > 0]
-    disc_q_codes.append({**removekey(q, 'text'), 'codes': [c['content'] for c in overlapping_codes]})
+    disc_q_codes.append({**lib.removekey(q, 'text'), 'codes': [c['codename'] for c in overlapping_codes]})
 
 disc_q_codes[0:2]
 
@@ -312,7 +313,7 @@ right_snippets_df = snippets_df[snippets_df['answer'] != 'Wrong']
 
 subject_answer_sums_df = right_snippets_df.groupby('subject')['answer'].count().reset_index()
 
-years_answers_df = subject_answer_sums_df.join(survey_first_lang_df[['Subject', 'Learned Year']].set_index('Subject'), on='subject')
+years_answers_df = subject_answer_sums_df.join(survey_first_lang_df[['Learned Year']], on='subject')
 
 years_answers_df['years_experience'] = years_answers_df.apply(lambda row: 2019-row['Learned Year'], axis=1)
 
@@ -347,14 +348,14 @@ plt.savefig('img/years_vs_correctness.pdf')
 
 from collections import Counter
 
-pprn(Counter([c['content'] for c in codes]))
+pprn(Counter([c['codename'] for c in codes]))
 
 #%%############################################################################
 #    Causes of Confusion
 ###############################################################################
 
 
-causes_confusion = [c for c in codes if c['content'] == 'Causes of Confusion']
+causes_confusion = [c for c in codes if c['codename'] == 'Causes of Confusion']
 
 pprn(causes_confusion)
 
@@ -401,7 +402,7 @@ plt.savefig('img/snippet_correctness.pdf')
 #    Operator Precedence - Right for wrong reason
 ###############################################################################
 
-right_wrong_reason = [{'snippet': s, 'code': c} for s in snippets for c in s.codes + s.discussion_codes if c['content'] == 'Correct for Wrong Reasons']
+right_wrong_reason = [{'snippet': s, 'code': c} for s in snippets for c in s.codes + s.discussion_codes if c['codename'] == 'Correct for Wrong Reasons']
 
 op_prec_right_wrong_reason = [d for d in right_wrong_reason if d['snippet'].snippet == 11]
 
@@ -424,7 +425,7 @@ def find_snippets_by_codes(snippets, code_names):
     return [{'snippet': s, 'code': c} for s in snippets for c in
             [{**x, 'section': 'Evaluation'} for x in s.codes] +
             [{**x, 'section': 'Discussion'} for x in s.discussion_codes
-            ] if c['content'] in code_names]
+            ] if c['codename'] in code_names]
 
 def print_code_snippets(code_snippets, context=200):
     for sc in code_snippets:
@@ -466,7 +467,7 @@ codes_df = pd.DataFrame([{**c, 'snippet': s.snippet, 'atom': s.atom,
               [{**x, 'section': 'Discussion'} for x in s.discussion_codes]])
 
 codes_df = codes_df.join(subject_groups_df, on='subject')
-codes_df.rename(columns={'content': 'code', 'group': 'subject_group'}, inplace=True)
+codes_df.rename(columns={'codename': 'code', 'group': 'subject_group'}, inplace=True)
 
 print(codes_df.groupby(['subject_group', 'code']).size().sort_values(ascending=False).to_csv())
 
@@ -498,7 +499,6 @@ judgement_counts_df.index.name = 'subject'
 judgement_years_df = judgement_counts_df.join(years_answers_df[['subject', 'answer', 'years_experience', 'subject_group']].set_index('subject'))
 judgement_years_df
 
-student_colors
 mpl.cm.get_cmap('viridis')
 judgement_years_df['subject_group_cvals'] = judgement_years_df['subject_group'].map(lambda sg: {'student': 0, 'user': 127, 'librarian': 255}[sg])
 
@@ -688,4 +688,4 @@ codes_df = pd.DataFrame([{'subject': s.subject, 'snippet': s.snippet, **c} for s
 snippet_codes_df = snippets_df.set_index(['subject', 'snippet']).join(codes_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
 snippet_codes_df
 
-snippet_codes_df.groupby(['confidence','answer','content']).size()
+snippet_codes_df.groupby(['confidence','answer','codename']).size()

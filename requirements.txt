@@ -1,1 +1,6 @@
 intervaltree
+numpy
+scipy
+pandas
+seaborn
+statsmodels
