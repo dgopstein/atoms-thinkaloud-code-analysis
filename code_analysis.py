@@ -413,9 +413,7 @@ pprn(op_prec_right_wrong_reason)
 #    Find every "caught own mistake", ignoring "before" or "after"
 ###############################################################################
 
-def text_context(subject, n_context, code):
-    start = code['start']
-    end = code['end']
+def text_context(subject, n_context, start, end):
     return texts[subject][start-n_context:start] + \
            "\nvvvvvvvvvvv\n" + \
            texts[subject][start:end] + \
@@ -435,7 +433,7 @@ def print_code_snippets(code_snippets, context=200):
         print("\n\n-----------------")
         print(s.subject, s.snippet, c['section'], s.answer, subject_groups[s.subject])
         print("-----------------")
-        print(text_context(s.subject, context, c))
+        print(text_context(s.subject, context, c['start'], c['end']))
 
 caught_own_mistakes = find_snippets_by_codes(snippets, ['Caught Own Mistake Before Prompted', 'Caught Own Mistake After Prompted'])
 
@@ -585,7 +583,7 @@ wrong_snippets_df[['snippet', 'group', 'confidence']].sort_values('snippet')
 
 plt.close()
 right_wrong_conf_fig, axs = plt.subplots(ncols=2, figsize=(6,3))
-right_wrong_conf_fig.subplots_adjust(top=0.8)
+right_wrong_conf_fig.subplots_adjust(top=0.8, bottom=0.2)
 right_conf_plot = sns.countplot(x='confidence', hue='group', data=right_snippets_df, ax=axs[0], order=[1,2,3,4,5,6], hue_order=['student', 'user', 'librarian'])
 right_conf_plot.set(ylim=(0,29))
 right_conf_plot.set_title('Correct Answers')
@@ -597,15 +595,15 @@ wrong_conf_plot.set_ylabel('')
 wrong_conf_plot.legend_.remove()
 right_wrong_conf_fig.suptitle('Confidence of Answers', fontsize=16)
 
-#right_conf_plot.grid(b=True, which='major', color='w', linewidth=1)
-
-# draw group separator ticks at bottom
+# draw group separator grid
 for i in range(6):
     right_conf_plot.axvline(i+0.5, ymax=1, color="white")
     wrong_conf_plot.axvline(i+0.5, ymax=1, color="white")
 
 plt.show()
 plt.savefig('img/right_wrong_conf.pdf')
+
+snippets_df.groupby(['group', 'confidence']).size()
 
 #%%############################################################################
 #    Correctness vs confidence by snippet
@@ -682,7 +680,12 @@ plt.show()
 
 
 #%%############################################################################
-#    Correctness vs confidence
+#    Correctness vs confidence examples
 ###############################################################################
 
+codes_df = pd.DataFrame([{'subject': s.subject, 'snippet': s.snippet, **c} for s in snippets for c in s.codes])
 
+snippet_codes_df = snippets_df.set_index(['subject', 'snippet']).join(codes_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
+snippet_codes_df
+
+snippet_codes_df.groupby(['confidence','answer','content']).size()
