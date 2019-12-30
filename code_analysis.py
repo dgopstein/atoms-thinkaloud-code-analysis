@@ -36,7 +36,6 @@ pprn = pp.pprint
 
 texts, bookmarks, snippets = parse_snippets.parse_interviews()
 codes = [b for b in bookmarks if parse_snippets.is_code(b)]
-#overlaps = [[lib.bkmk_to_code(b) for b in overlap] for overlap in extract_rtf.all_overlaps(bookmarks)]
 overlaps = extract_rtf.all_overlaps(bookmarks)
 print() or pp.pprint(snippets)
 
@@ -432,7 +431,7 @@ def print_code_snippets(code_snippets, context=200):
         s = sc['snippet']
         c = sc['code']
         print("\n\n-----------------")
-        print(s.subject, s.snippet, c['section'], s.answer, subject_groups[s.subject])
+        print(s.subject, s.snippet, c['section'], s.answer, subject_groups[s.subject], ' - ', c['codename'])
         print("-----------------")
         print(text_context(s.subject, context, c['start'], c['end']))
 
@@ -688,4 +687,59 @@ codes_df = pd.DataFrame([{'subject': s.subject, 'snippet': s.snippet, **c} for s
 snippet_codes_df = snippets_df.set_index(['subject', 'snippet']).join(codes_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
 snippet_codes_df
 
-snippet_codes_df.groupby(['confidence','answer','codename']).size()
+snippet_codes_df[(snippet_codes_df['confidence']==6) & (snippet_codes_df['answer']=='Right')].groupby(['codename']).size().sort_values(ascending=False)
+
+snippet_codes_df[(snippet_codes_df['confidence']==6) & (snippet_codes_df['answer']=='Wrong')].groupby(['codename']).size().sort_values(ascending=False)
+
+snippet_codes_df[(snippet_codes_df['confidence']<5) & (snippet_codes_df['answer']=='Right')].groupby(['codename']).size().sort_values(ascending=False)
+
+snippet_codes_df[(snippet_codes_df['confidence']<5) & (snippet_codes_df['answer']=='Wrong')].groupby(['codename']).size().sort_values(ascending=False)
+
+#  6 - Right
+# Simple                  36
+# Sure                    31
+# Amusement               19
+# Snippet Value Judgement 13
+# Double Check            12
+#
+#  6 - Wrong
+# Sure                              3
+# Unsure                            2
+# Simple                            2
+# Remember                          2
+# Relying on Correctness of Example 2
+#
+#  <5 - Right
+# Unsure                             8
+# Remember                           3
+# Inferring Semantics from Reasoning 3
+# Not Previously Written             2
+# Author Intention                   2
+#
+#  <5 - Wrong
+# Unsure                       9
+# Boolean Value of Integer     4
+# Uninitialized                3
+# Multiple Possible Semantics  3
+# Guessing                     3
+
+print_code_snippets(find_snippets_by_codes(snippets, ['Sure'])[0:15])
+
+# 4168 73 Sure Correct - Like I know how assignment works. I know how if statements work and I know how printf works. So there's nothing in here unlike any other question where I couldn't quite remember
+
+# 4642 73 Sure Correct - I think that's not confused me in any way.
+
+print_code_snippets(find_snippets_by_codes(snippets, ['Unsure'])[25:30])
+
+# 8697 1 Right Unsure - I wonder if C++ allows that, actually, I don't know.
+
+# 7640 71 Right Unsure - I certainly am like much less confident about what happens in the preprocessor then the rest of the language
+
+[(c['snippet'].answer, c['snippet'].confidence) for c in correct_for_wrong_reasons]
+
+snippets_df[snippets_df['confidence']==1]
+
+pd.options.display.max_colwidth = 200
+snippet_codes_df[(snippet_codes_df['confidence']==6) & (snippet_codes_df['codename']=='Unsure')]['text']
+
+snippet_codes_df
