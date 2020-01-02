@@ -684,7 +684,7 @@ plt.show()
 
 codes_df = pd.DataFrame([{'subject': s.subject, 'snippet': s.snippet, **c} for s in snippets for c in s.codes])
 
-snippet_codes_df = snippets_df.set_index(['subject', 'snippet']).join(codes_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
+snippet_codes_df = snippets_df.set_index(['subject', 'snippet']).drop(['start', 'end'], 1).join(codes_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
 snippet_codes_df
 
 snippet_codes_df[(snippet_codes_df['confidence']==6) & (snippet_codes_df['answer']=='Right')].groupby(['codename']).size().sort_values(ascending=False)
@@ -739,7 +739,39 @@ print_code_snippets(find_snippets_by_codes(snippets, ['Unsure'])[25:30])
 
 snippets_df[snippets_df['confidence']==1]
 
-pd.options.display.max_colwidth = 200
-snippet_codes_df[(snippet_codes_df['confidence']==6) & (snippet_codes_df['codename']=='Unsure')]['text']
+#%%############################################################################
+#    Conflicting confidence sure/unsure
+###############################################################################
 
-snippet_codes_df
+pd.options.display.max_colwidth = 5
+
+susdf = sure_unsure_snippets_df = snippet_codes_df[snippet_codes_df['codename']=='Sure'].join(snippet_codes_df[snippet_codes_df['codename']=='Unsure'][['start','end','text']], how='inner', lsuffix='_sure', rsuffix='_unsure')
+
+sure_unsure_overlap_df = susdf[(susdf['start_sure'] <= susdf['end_unsure']) & (susdf['start_unsure'] <= susdf['end_sure'])]
+(scdf6s['start'] <= scdf6u['end']) & (scdf6u['start'] <= scdf6s['end'])
+
+pd.options.display.max_colwidth = 500
+sure_unsure_overlap_df
+
+snippets_df[["subject", "snippet", "answer"]]
+
+snippets_df.groupby('answer').agg('mean')
+
+#%%############################################################################
+#    Guessing vs Reasoning
+###############################################################################
+
+inferring_guessing = (find_snippets_by_codes(snippets, ['Inferring Semantics from Reasoning', 'Guessing']))
+
+pd.options.display.max_colwidth = 700
+#snippet_codes_df[snippet_codes_df['codename']=='Inferring Semantics from Reasoning'].join(snippet_codes_df[snippet_codes_df['codename']=='Guessing'][['start','end','text']], how='inner', lsuffix='_infer', rsuffix='_guess')
+
+snippet_codes_df[(snippet_codes_df['codename']=='Inferring Semantics from Reasoning') | (snippet_codes_df['codename']=='Guessing')][['answer','confidence','codename','text']]
+
+snippet_codes_df[(snippet_codes_df['codename']=='Inferring Semantics from Reasoning')][['answer','confidence','text']]
+snippet_codes_df[(snippet_codes_df['codename']=='Guessing')][['start','answer','confidence','text']]
+
+
+snippet_codes_df[(snippet_codes_df['codename']=='Guessing') & (snippet_codes_df['start']==1326)].values[0][-1]
+snippet_codes_df[(snippet_codes_df['codename']=='Inferring Semantics from Reasoning') & (snippet_codes_df['start']==5277)].values[0][-1]
+#snippet_codes_df[(snippet_codes_df['codename']=='Inferring Semantics from Reasoning')].loc[(8888,11)][['start','answer','confidence','text']]
