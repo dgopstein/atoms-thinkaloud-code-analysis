@@ -682,18 +682,23 @@ plt.show()
 #    Correctness vs confidence examples
 ###############################################################################
 
-codes_df = pd.DataFrame([{'subject': s.subject, 'snippet': s.snippet, **c} for s in snippets for c in s.codes])
+pd.options.display.max_colwidth = 5
+eval_codes_without_snippets_df = pd.DataFrame([{'subject': s.subject, 'snippet': s.snippet, **c} for s in snippets for c in s.codes])
+eval_codes_df = snippets_df.set_index(['subject', 'snippet']).drop(['start', 'end'], 1).join(eval_codes_without_snippets_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
+eval_codes_df
 
-snippet_codes_df = snippets_df.set_index(['subject', 'snippet']).drop(['start', 'end'], 1).join(codes_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
-snippet_codes_df
+disc_codes_without_snippets_df = pd.DataFrame([{'subject': s.subject, 'snippet': s.snippet, **c} for s in snippets for c in s.discussion_codes])
+disc_codes_df = snippets_df.set_index(['subject', 'snippet']).drop(['start', 'end'], 1).join(disc_codes_without_snippets_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
+disc_codes_df['section'] = 'Discussion'
+disc_codes_df
 
-snippet_codes_df[(snippet_codes_df['confidence']==6) & (snippet_codes_df['answer']=='Right')].groupby(['codename']).size().sort_values(ascending=False)
+eval_codes_df[(eval_codes_df['confidence']==6) & (eval_codes_df['answer']=='Right')].groupby(['codename']).size().sort_values(ascending=False)
 
-snippet_codes_df[(snippet_codes_df['confidence']==6) & (snippet_codes_df['answer']=='Wrong')].groupby(['codename']).size().sort_values(ascending=False)
+eval_codes_df[(eval_codes_df['confidence']==6) & (eval_codes_df['answer']=='Wrong')].groupby(['codename']).size().sort_values(ascending=False)
 
-snippet_codes_df[(snippet_codes_df['confidence']<5) & (snippet_codes_df['answer']=='Right')].groupby(['codename']).size().sort_values(ascending=False)
+eval_codes_df[(eval_codes_df['confidence']<5) & (eval_codes_df['answer']=='Right')].groupby(['codename']).size().sort_values(ascending=False)
 
-snippet_codes_df[(snippet_codes_df['confidence']<5) & (snippet_codes_df['answer']=='Wrong')].groupby(['codename']).size().sort_values(ascending=False)
+eval_codes_df[(eval_codes_df['confidence']<5) & (eval_codes_df['answer']=='Wrong')].groupby(['codename']).size().sort_values(ascending=False)
 
 #  6 - Right
 # Simple                  36
@@ -745,10 +750,10 @@ snippets_df[snippets_df['confidence']==1]
 
 pd.options.display.max_colwidth = 5
 
-susdf = sure_unsure_snippets_df = snippet_codes_df[snippet_codes_df['codename']=='Sure'].join(snippet_codes_df[snippet_codes_df['codename']=='Unsure'][['start','end','text']], how='inner', lsuffix='_sure', rsuffix='_unsure')
+susdf = sure_unsure_snippets_df = eval_codes_df[eval_codes_df['codename']=='Sure'].join(eval_codes_df[eval_codes_df['codename']=='Unsure'][['start','end','text']], how='inner', lsuffix='_sure', rsuffix='_unsure')
 
 sure_unsure_overlap_df = susdf[(susdf['start_sure'] <= susdf['end_unsure']) & (susdf['start_unsure'] <= susdf['end_sure'])]
-(scdf6s['start'] <= scdf6u['end']) & (scdf6u['start'] <= scdf6s['end'])
+#(scdf6s['start'] <= scdf6u['end']) & (scdf6u['start'] <= scdf6s['end'])
 
 pd.options.display.max_colwidth = 500
 sure_unsure_overlap_df
@@ -764,14 +769,93 @@ snippets_df.groupby('answer').agg('mean')
 inferring_guessing = (find_snippets_by_codes(snippets, ['Inferring Semantics from Reasoning', 'Guessing']))
 
 pd.options.display.max_colwidth = 700
-#snippet_codes_df[snippet_codes_df['codename']=='Inferring Semantics from Reasoning'].join(snippet_codes_df[snippet_codes_df['codename']=='Guessing'][['start','end','text']], how='inner', lsuffix='_infer', rsuffix='_guess')
+#eval_codes_df[eval_codes_df['codename']=='Inferring Semantics from Reasoning'].join(eval_codes_df[eval_codes_df['codename']=='Guessing'][['start','end','text']], how='inner', lsuffix='_infer', rsuffix='_guess')
 
-snippet_codes_df[(snippet_codes_df['codename']=='Inferring Semantics from Reasoning') | (snippet_codes_df['codename']=='Guessing')][['answer','confidence','codename','text']]
+eval_codes_df[(eval_codes_df['codename']=='Inferring Semantics from Reasoning') | (eval_codes_df['codename']=='Guessing')][['answer','confidence','codename','text']]
 
-snippet_codes_df[(snippet_codes_df['codename']=='Inferring Semantics from Reasoning')][['answer','confidence','text']]
-snippet_codes_df[(snippet_codes_df['codename']=='Guessing')][['start','answer','confidence','text']]
+eval_codes_df[(eval_codes_df['codename']=='Inferring Semantics from Reasoning')][['answer','confidence','text']]
+eval_codes_df[(eval_codes_df['codename']=='Guessing')][['start','answer','confidence','text']]
 
 
-snippet_codes_df[(snippet_codes_df['codename']=='Guessing') & (snippet_codes_df['start']==1326)].values[0][-1]
-snippet_codes_df[(snippet_codes_df['codename']=='Inferring Semantics from Reasoning') & (snippet_codes_df['start']==5277)].values[0][-1]
-#snippet_codes_df[(snippet_codes_df['codename']=='Inferring Semantics from Reasoning')].loc[(8888,11)][['start','answer','confidence','text']]
+eval_codes_df[(eval_codes_df['codename']=='Guessing') & (eval_codes_df['start']==1326)].values[0][-1]
+eval_codes_df[(eval_codes_df['codename']=='Inferring Semantics from Reasoning') & (eval_codes_df['start']==5277)].values[0][-1]
+#eval_codes_df[(eval_codes_df['codename']=='Inferring Semantics from Reasoning')].loc[(8888,11)][['start','answer','confidence','text']]
+
+#%%############################################################################
+#    Did anyone Double Check an Incorrect Answer
+###############################################################################
+# Answer: yes, one person did, which puts it at slightly less than the rates of errors which didn't double check, but not enough to be notable. This is after accounting for the one subject who double checked everything.
+
+
+# Find snippets that contain both of the codes
+def code_overlapping_snippets(code_a, code_b):
+    return eval_codes_df[eval_codes_df['codename']==code_a].join(eval_codes_df[eval_codes_df['codename']==code_b][['start','end','text']], how='inner', lsuffix='_left', rsuffix='_right')
+
+pd.options.display.max_colwidth = 400
+eval_codes_df[eval_codes_df['codename']=='Double Check'].drop(['atom','start', 'end','codename','section','confusingness'], 1)
+
+snippets_df.groupby('answer').size()
+
+
+pd.options.display.max_colwidth = 10
+code_overlapping_snippets('Double Check', 'Caught Own Mistake Before Prompted')
+
+#%%############################################################################
+#    Student confidence 5, and error
+###############################################################################
+snippets_df[(snippets_df['confidence']==5) & (snippets_df['group']=='student') & (snippets_df['answer']=='Wrong')]
+
+
+#%%############################################################################
+#    Surprising Comment
+###############################################################################
+
+pd.options.display.max_colwidth = 900
+eval_codes_df[eval_codes_df['codename']=='Surprising comment']['text']
+
+#%%############################################################################
+#    New Atom Candidates
+###############################################################################
+eval_codes_df.groupby('codename').size()
+
+pd.options.display.max_colwidth = 9000
+eval_codes_df[eval_codes_df['codename']=='Potential Confusing Constructs']
+eval_codes_df[eval_codes_df['codename']=='Attribution of Confusion']
+eval_codes_df[eval_codes_df['codename']=='Causes of Confusion']
+eval_codes_df[eval_codes_df['codename']=='Change of Radix']
+eval_codes_df[eval_codes_df['codename']=='Evaluation Order']
+
+
+
+#%%############################################################################
+#    Active Reading
+###############################################################################
+eval_codes_df[eval_codes_df['codename']=='Clever']
+eval_codes_df[eval_codes_df['codename']=='Criticism of Study Design']
+eval_codes_df[eval_codes_df['codename']=='Wanted Reference']
+
+
+#%%############################################################################
+#    Every Incorrect Semantics (put this in google sheets and derive potential new atoms)
+###############################################################################
+print(eval_codes_df[(eval_codes_df['codename']=='Incorrect Semantics') | (eval_codes_df['codename']=='Partially Correct Semantics')].to_csv())
+
+print(disc_codes_df[(disc_codes_df['codename']=='Incorrect Semantics') | (disc_codes_df['codename']=='Partially Correct Semantics')].to_csv())
+
+#%%############################################################################
+#    Comprehension Technique / Mental Model
+###############################################################################
+
+#%%############################################################################
+#    Non-standard Terminology
+###############################################################################
+
+#%%############################################################################
+#    Not Previously Seen/Written, Uncommon pattern, Unfamiliar Syntax
+###############################################################################
+
+#%%############################################################################
+#    Value exists
+###############################################################################
+
+
