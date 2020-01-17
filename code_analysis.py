@@ -692,6 +692,14 @@ disc_codes_df = snippets_df.set_index(['subject', 'snippet']).drop(['start', 'en
 disc_codes_df['section'] = 'Discussion'
 disc_codes_df
 
+all_codes_df = eval_codes_df.append(disc_codes_df)
+
+#eval_codes_df.reset_index(inplace=True)
+#disc_codes_df.reset_index(inplace=True)
+#all_codes_df.reset_index(inplace=True)
+
+all_codes_df.groupby('section').size()
+
 eval_codes_df[(eval_codes_df['confidence']==6) & (eval_codes_df['answer']=='Right')].groupby(['codename']).size().sort_values(ascending=False)
 
 eval_codes_df[(eval_codes_df['confidence']==6) & (eval_codes_df['answer']=='Wrong')].groupby(['codename']).size().sort_values(ascending=False)
@@ -843,6 +851,72 @@ print(eval_codes_df[(eval_codes_df['codename']=='Incorrect Semantics') | (eval_c
 print(disc_codes_df[(disc_codes_df['codename']=='Incorrect Semantics') | (disc_codes_df['codename']=='Partially Correct Semantics')].to_csv())
 
 #%%############################################################################
+#    Short-circuiting
+###############################################################################
+
+pd.options.display.max_colwidth = 900
+all_codes_df[(all_codes_df['codename']=='Short-circuiting')]
+
+## 56 correct short-circuiting
+# 4281
+# 8888
+
+all_codes_df[(all_codes_df['codename']=='False Operand Causes Short-Circuit')]
+
+snippets_df[snippets_df['snippet']==79].join(subject_groups_df, on='subject')
+
+#%%############################################################################
+#    Conditional vs Precedence
+###############################################################################
+all_codes_no_index_df = all_codes_df.reset_index()
+all_codes_no_index_df[(all_codes_no_index_df['codename']=='Parenthesis') & (all_codes_no_index_df['snippet']==49)]
+
+#%%############################################################################
+#    Uninitialized Value
+###############################################################################
+all_codes_df[(all_codes_df['codename']=='Uninitialized')]
+all_codes_no_index_df[(all_codes_no_index_df['codename']=='Uninitialized') & (all_codes_no_index_df['snippet']==49)]
+
+
+#%%############################################################################
+#    Uninitialized Value
+###############################################################################
+all_codes_no_index_df[(all_codes_no_index_df['codename']=='Modulus')]
+all_codes_no_index_df[(all_codes_no_index_df['codename']=='Modulus') & (all_codes_no_index_df['subject']==8697)]
+
+#%%############################################################################
+#    Octal misunderstanding reasons
+###############################################################################
+all_codes_no_index_df[(all_codes_no_index_df['snippet']==105) & (all_codes_no_index_df['codename']=='Incorrect Semantics')]
+
+#%%############################################################################
+#    Octal misunderstanding reasons
+###############################################################################
+all_codes_no_index_df[(all_codes_no_index_df['codename']=='Strings as Pointers/Arrays')]
+
+#%%############################################################################
+#    Math is easy or hard
+###############################################################################
+
+all_codes_df[(all_codes_df['codename']=='Math is easy or hard')]
+
+#%%############################################################################
+#    Logical Operator Must Be in Condition
+###############################################################################
+all_codes_df[(all_codes_df['codename']=='Logical Operator Must Be in Condition')]
+
+#%%############################################################################
+#    Relying on Correctness of Example
+###############################################################################
+all_codes_df[(all_codes_df['codename']=='Relying on Correctness of Example')]
+
+#%%############################################################################
+#    Macro Redefinition
+###############################################################################
+all_codes_df[(all_codes_df['codename']=='Macro Redefinition')]
+all_codes_df[(all_codes_df['codename']=='Criticism of Study Design')]
+
+#%%############################################################################
 #    Comprehension Technique / Mental Model
 ###############################################################################
 
@@ -854,8 +928,5 @@ print(disc_codes_df[(disc_codes_df['codename']=='Incorrect Semantics') | (disc_c
 #    Not Previously Seen/Written, Uncommon pattern, Unfamiliar Syntax
 ###############################################################################
 
-#%%############################################################################
-#    Value exists
-###############################################################################
 
 
