@@ -682,6 +682,7 @@ plt.show()
 #    Correctness vs confidence examples
 ###############################################################################
 
+# codes_df's generated from snippets won't contain codes not specifically about a particular snippet, e.g. during the survey
 pd.options.display.max_colwidth = 5
 eval_codes_without_snippets_df = pd.DataFrame([{'subject': s.subject, 'snippet': s.snippet, **c} for s in snippets for c in s.codes])
 eval_codes_df = snippets_df.set_index(['subject', 'snippet']).drop(['start', 'end'], 1).join(eval_codes_without_snippets_df.set_index(['subject', 'snippet']), how='right', lsuffix='_snippet')
@@ -863,7 +864,7 @@ all_codes_df[(all_codes_df['codename']=='Short-circuiting')]
 
 all_codes_df[(all_codes_df['codename']=='False Operand Causes Short-Circuit')]
 
-snippets_df[snippets_df['snippet']==79].join(subject_groups_df, on='subject')
+snippets_df[snippets_df['snippet']==79]
 
 #%%############################################################################
 #    Conditional vs Precedence
@@ -923,10 +924,12 @@ all_codes_df[(all_codes_df['codename']=='Criticism of Study Design')]
 #%%############################################################################
 #    Non-standard Terminology
 ###############################################################################
+pd.options.display.max_colwidth = 50
+all_codes_df[(all_codes_df['codename']=='Non-standard terminology')]
+print(all_codes_df[(all_codes_df['codename']=='Non-standard terminology')].to_csv())
+all_codes_df[(all_codes_df['codename']=='Non-standard terminology')].groupby('group').size()
+
 
 #%%############################################################################
 #    Not Previously Seen/Written, Uncommon pattern, Unfamiliar Syntax
 ###############################################################################
-
-
-
