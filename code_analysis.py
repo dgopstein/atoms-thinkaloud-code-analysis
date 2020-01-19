@@ -920,6 +920,7 @@ all_codes_df[(all_codes_df['codename']=='Criticism of Study Design')]
 #%%############################################################################
 #    Comprehension Technique / Mental Model
 ###############################################################################
+all_codes_df[(all_codes_df['codename']=='Compiler Optimizations')]
 
 #%%############################################################################
 #    Non-standard Terminology
