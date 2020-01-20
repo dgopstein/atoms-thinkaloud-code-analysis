@@ -920,7 +920,10 @@ all_codes_df[(all_codes_df['codename']=='Criticism of Study Design')]
 #%%############################################################################
 #    Comprehension Technique / Mental Model
 ###############################################################################
+pd.options.display.max_colwidth = 500
 all_codes_df[(all_codes_df['codename']=='Compiler Optimizations')]
+all_codes_df[(all_codes_df['codename']=='Boolean Value of Integer')]
+all_codes_df[(all_codes_df['codename']=='Value Exists')]
 
 #%%############################################################################
 #    Non-standard Terminology
@@ -930,7 +933,29 @@ all_codes_df[(all_codes_df['codename']=='Non-standard terminology')]
 print(all_codes_df[(all_codes_df['codename']=='Non-standard terminology')].to_csv())
 all_codes_df[(all_codes_df['codename']=='Non-standard terminology')].groupby('group').size()
 
+#%%############################################################################
+#    Pointer Arithmetic Atoms
+###############################################################################
+pd.options.display.max_colwidth = 5000
+
+pa_snippets = [s for s in snippets if s.atom == 'Pointer Arithmetic']
+
+len(pa_snippets)
+[s.confusingness for s in pa_snippets]
+[s.confusingness for s in pa_snippets]
+
+pa_atom_3316 = [s for s in pa_snippets if s.subject == 3316 and s.confusingness == 'Atom'][0]
+
+pa_trans_3316 = [s for s in pa_snippets if s.subject == 3316 and s.confusingness == 'Transformation'][0]
+
+print(pa_atom_3316.eval_text)
+print(pa_atom_3316.disc_text)
+pa_trans_3316.text
+
+
 
 #%%############################################################################
 #    Not Previously Seen/Written, Uncommon pattern, Unfamiliar Syntax
 ###############################################################################
+
+plt.close()

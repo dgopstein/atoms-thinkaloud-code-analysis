@@ -20,17 +20,17 @@ class Snippet:
         match = re.match(regex, element['codename'])
         return {'start': element['start'], 'end': element['end'], 'match': match.group(1)}
 
-    def create(subject, overlap):
+    def create(subject, overlap, subject_text):
         try:
-            return EvalSnippet(subject, overlap)
+            return EvalSnippet(subject, overlap, subject_text)
         except StopIteration: # this overlap doesn't descript a snippet (maybe it's a code inside a snippet)
             try:
-                return DiscussionSnippet(subject, overlap)
+                return DiscussionSnippet(subject, overlap, subject_text)
             except StopIteration:
                 return None
             return None
 
-    def __init__(self, subject, overlap):
+    def __init__(self, subject, overlap, subject_text):
         snippet = Snippet.find_content(self.SNIPPET_PAT, overlap)
         self.subject = subject
         self.start = snippet['start']
@@ -38,6 +38,7 @@ class Snippet:
         self.snippet = int(snippet['match'])
         self.section = Snippet.find_content(self.SECTION_PAT, overlap)['match']
         self.codes = []
+        self.eval_text = subject_text[self.start:self.end]
 
     def __hash__(self):
        return (self.subject, self.start, self.end, self.snippet, self.section).__hash__()
@@ -49,8 +50,8 @@ class Snippet:
        return self.start < other.start
 
 class DiscussionSnippet(Snippet):
-    def __init__(self, subject, overlap):
-        Snippet.__init__(self, subject, overlap)
+    def __init__(self, subject, overlap, subject_text):
+        Snippet.__init__(self, subject, overlap, subject_text)
         if self.section != 'Discussion':
             raise StopIteration
 
@@ -58,13 +59,14 @@ class DiscussionSnippet(Snippet):
        return '%s <%d, %d> (%d - %s)' % (self.subject, self.start, self.end, self.snippet, self.section)
 
 class EvalSnippet(Snippet):
-    def __init__(self, subject, overlap):
-        Snippet.__init__(self, subject, overlap)
+    def __init__(self, subject, overlap, subject_text):
+        Snippet.__init__(self, subject, overlap, subject_text)
         self.answer = Snippet.find_content(self.ANSWER_PAT, overlap)['match']
         self.confusingness = Snippet.find_content(self.CONFUSINGNESS_PAT, overlap)['match']
         self.confidence = int(Snippet.find_content(self.CONFIDENCE_PAT, overlap)['match'])
         self.atom = Snippet.find_content(self.ATOM_PAT, overlap)['match']
         self.discussion_codes = []
+        self.disc_text = None
 
     def __repr__(self):
        return '%s <%d, %d> (%d - %s %s) [%s - %d]' % (self.subject, self.start, self.end, self.snippet, self.atom, self.confusingness, self.answer, self.confidence)
@@ -103,7 +105,7 @@ def parse_interviews():
         all_text[subject] = stripped_rtf
 
         overlaps = extract_rtf.all_overlaps(bookmarks)
-        snippet_list = [Snippet.create(subject, ol) for ol in overlaps if Snippet.create(subject, ol) if not None]
+        snippet_list = [Snippet.create(subject, ol, stripped_rtf) for ol in overlaps if Snippet.create(subject, ol, stripped_rtf) if not None]
         #eval_snippet_list = [s in snippet_list if s.section = 'Evaluation']
         #disc_snippet_list = [s in snippet_list if s.section = 'Discussion']
         combined_snippets = set(snippet_list)
@@ -143,6 +145,7 @@ def merge_eval_and_discussion(combined_snippets):
 
     for ds in discs:
         eval_dict[snippet_key(ds)].discussion_codes.extend(ds.codes)
+        eval_dict[snippet_key(ds)].disc_text = ds.eval_text
 
     return sorted(eval_dict.values())
 
