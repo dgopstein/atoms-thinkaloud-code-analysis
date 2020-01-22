@@ -950,12 +950,52 @@ pa_trans_3316 = [s for s in pa_snippets if s.subject == 3316 and s.confusingness
 
 print(pa_atom_3316.eval_text)
 print(pa_atom_3316.disc_text)
-pa_trans_3316.text
+print(pa_trans_3316.eval_text)
 
+all_codes_df[(all_codes_df['atom'] == 'Pointer Arithmetic') & (all_codes_df['codename'] == 'Unsure')]
+
+#pd.set_option('display.max_columns', None)
+snippets_df[snippets_df['atom'] == 'Pointer Arithmetic']
+
+snippets_df[(snippets_df['atom'] == 'Pointer Arithmetic') & (snippets_df['confusingness'] == 'Atom')]
+snippets_df[(snippets_df['atom'] == 'Pointer Arithmetic') & (snippets_df['confusingness'] == 'Atom')].groupby('confidence').size()
+snippets_df[snippets_df['confusingness'] == 'Transformation'].groupby('confidence').size()
+
+pa_atom_1867 = [s for s in pa_snippets if s.subject == 1867 and s.confusingness == 'Atom'][0]
+print(pa_atom_1867.eval_text)
+print(pa_atom_1867.disc_text)
 
 
 #%%############################################################################
 #    Not Previously Seen/Written, Uncommon pattern, Unfamiliar Syntax
 ###############################################################################
+
+#%%############################################################################
+#    Professional Opinions
+###############################################################################
+
+pd.set_option('display.max_columns', None)
+pd.options.display.max_colwidth = 2000
+opinions_df = all_codes_df[all_codes_df['codename'].isin(['Snippet Value Judgement', 'Would Have Written it Differently', 'Code Review'])]
+
+opinions_df.groupby('group').size()
+opinions_df
+
+opinions_df[opinions_df['group'] == 'student'][['text']]
+
+years_vs_opinions_df = opinions_df.join(survey_first_lang_df, on='subject').groupby(['subject', 'group', 'Years Programming']).size()
+
+years_vs_opinions_df = years_vs_opinions_df.reset_index().rename(columns={0:'count', 'Years Programming': 'years'})
+
+
+years_vs_opinions_df = survey_first_lang_df.join(years_vs_opinions_df[['subject', 'count']].set_index('subject'), on='Subject')
+years_vs_opinions_df = years_vs_opinions_df.reset_index().rename(columns={0:'count', 'Years Programming': 'years', 'Subject': 'subject'})
+years_vs_opinions_df = years_vs_opinions_df[['subject', 'years', 'count']]
+years_vs_opinions_df
+
+
+years_vs_opinions_plot = sns.scatterplot(x='years', y='count', hue='group', data=years_vs_opinions_df)
+years_vs_opinions_plot.set_title('Opinions per Subject, by Experience')
+plt.savefig('img/years_vs_opinions.pdf')
 
 plt.close()
