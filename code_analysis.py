@@ -998,4 +998,42 @@ years_vs_opinions_plot = sns.scatterplot(x='years', y='count', hue='group', data
 years_vs_opinions_plot.set_title('Opinions per Subject, by Experience')
 plt.savefig('img/years_vs_opinions.pdf')
 
+
+#%%############################################################################
+#    Top-down vs Bottom-up
+###############################################################################
+
+all_codes_df[all_codes_df['codename'] == 'Bottom-up comprehension']
+all_codes_df[all_codes_df['codename'] == 'Top-down comprehension']
+
+all_codes_df[all_codes_df['codename'] == 'Top-down comprehension'].groupby(['group', 'subject', 'snippet']).size()
+
+
+all_codes_df[all_codes_df['codename'] == 'Author Intention'].groupby(['group', 'subject', 'snippet']).size()
+
+all_codes_df[all_codes_df['codename'] == 'Author Intention'].groupby(['group']).size()
+
+all_codes_df[(all_codes_df['codename'] == 'Author Intention') & (all_codes_df['group'] == 'student')][['group', 'section', 'text']]
+
+#%%############################################################################
+#    Counter-factual Semantics
+###############################################################################
+
+all_codes_df[(all_codes_df['codename'] == 'Counterfactual Semantics')].groupby('group').size()
+print(all_codes_df[(all_codes_df['codename'] == 'Counterfactual Semantics')].to_csv())
+
+#%%############################################################################
+#    Notices transformation (in)correctly
+###############################################################################
+
+all_codes_df[(all_codes_df['codename'] == 'Notices Transformation Incorrectly')]
+all_codes_df[(all_codes_df['codename'] == 'Notices Transformation Correctly')]
+
+all_codes_df.groupby('codename').size()
+
+
+
+
+
+
 plt.close()
