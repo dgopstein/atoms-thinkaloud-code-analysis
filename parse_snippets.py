@@ -12,7 +12,7 @@ class Snippet:
     ANSWER_PAT = 'Answer - (.*)'
     CONFUSINGNESS_PAT = 'Confusingness - (.*)'
     CONFIDENCE_PAT = 'Confidence - (.*)'
-    ATOM_PAT = '(.*[^-]) (Atom|Transformation)'
+    ATOM_PAT = '(.*[^-]) (Atom|Transformation)$'
     SECTION_PAT = 'Section - (.*)'
 
     def find_content(regex, overlap):

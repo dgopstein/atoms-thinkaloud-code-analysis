@@ -987,11 +987,9 @@ years_vs_opinions_df = opinions_df.join(survey_first_lang_df, on='subject').grou
 
 years_vs_opinions_df = years_vs_opinions_df.reset_index().rename(columns={0:'count', 'Years Programming': 'years'})
 
-
-years_vs_opinions_df = survey_first_lang_df.join(years_vs_opinions_df[['subject', 'count']].set_index('subject'), on='Subject')
+years_vs_opinions_df = survey_first_lang_df.join(years_vs_opinions_df[['subject', 'count', 'group']].set_index('subject'), on='Subject')
 years_vs_opinions_df = years_vs_opinions_df.reset_index().rename(columns={0:'count', 'Years Programming': 'years', 'Subject': 'subject'})
-years_vs_opinions_df = years_vs_opinions_df[['subject', 'years', 'count']]
-years_vs_opinions_df
+years_vs_opinions_df = years_vs_opinions_df[['subject', 'years', 'count', 'group']]
 
 
 years_vs_opinions_plot = sns.scatterplot(x='years', y='count', hue='group', data=years_vs_opinions_df)
@@ -1026,14 +1024,37 @@ print(all_codes_df[(all_codes_df['codename'] == 'Counterfactual Semantics')].to_
 #    Notices transformation (in)correctly
 ###############################################################################
 
-all_codes_df[(all_codes_df['codename'] == 'Notices Transformation Incorrectly')]
-all_codes_df[(all_codes_df['codename'] == 'Notices Transformation Correctly')]
+notices_incorrect_df = all_codes_df[(all_codes_df['codename'] == 'Notices Transformation Incorrectly')]
+notices_correct_df = all_codes_df[(all_codes_df['codename'] == 'Notices Transformation Correctly')]
 
-all_codes_df.groupby('codename').size()
+notices_correct_df['accurately'] = 'Correct'
+notices_incorrect_df['accurately'] = 'Incorrect'
+notices_transformation_df = notices_correct_df.append(notices_incorrect_df)
+notices_transformation_df
+pd.options.display.max_colwidth = 8
 
+notices_transformation_unique_df = notices_transformation_df.loc[~notices_transformation_df.index.duplicated()]
+print(notices_transformation_unique_df.to_csv())
 
+notices_transformation_unique_df.groupby(['accurately', 'snippet']).size()
+notices_transformation_unique_df.groupby(['subject', 'accurately']).size()
 
+snippets_df['position'] = 1
+snippets_df['position'] = snippets_df.groupby('subject').cumsum()['position']
 
+snippets_df[['subject', 'snippet', 'position']]
+#snippets_df['pair_id'] = None
+snippets_df.loc[snippets_df['confusingness'] == 'Atom', 'pair_id'] = snippets_df[snippets_df['confusingness'] == 'Atom']['snippet'] + 1
+snippets_df.loc[snippets_df['confusingness'] == 'Transformation', 'pair_id'] = snippets_df[snippets_df['confusingness'] == 'Transformation']['snippet'] - 1
 
+snippets_df.groupby('subject').agg(lambda df: df['pair_position']df['position']))
+
+snippet_pairs_df = pd.merge(snippets_df, snippets_df, left_on=['subject', 'pair_id'], right_on=['subject', 'snippet'], suffixes=('_l', '_r'))[['subject', 'snippet_l', 'snippet_r', 'position_l', 'position_r']]
+
+snippet_pairs_df['delta'] = snippet_pairs_df['position_l'] - snippet_pairs_df['position_r']
+snippet_pairs_df.groupby('snippet_l').size()
+snippet_pairs_df.groupby('delta').size()
+
+len(snippets_df)
 
 plt.close()
