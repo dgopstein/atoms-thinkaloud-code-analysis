@@ -1058,3 +1058,38 @@ snippet_pairs_df.groupby('delta').size()
 len(snippets_df)
 
 plt.close()
+
+#%%############################################################################
+#    Descriptive stats for analysis
+###############################################################################
+
+# Duration of interviews in minutes
+# interview number, minutes, seconds
+interview_time_segs = [[7640,33,39],
+[1157,33,14],
+[1879,30,40],
+[4304,57,9],
+[8888,48,37],
+[6061,46,37],
+[3787,50,7],
+[9112,33,6],
+[4281,49,20],
+[3316,45,29],
+[4168,70,9]]
+
+interview_mins = 0
+interview_secs = 0
+for _, mins, secs in interview_time_segs:
+    interview_mins += mins
+    interview_secs += secs
+
+interview_mins += interview_secs/60
+interview_mins/60
+
+# Number of words
+joined_text = ''.join(texts.values())
+len(joined_text.split())
+
+# number of paragraphs
+import re
+len(re.findall('^$', joined_text, re.M))
