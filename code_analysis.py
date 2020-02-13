@@ -1047,7 +1047,7 @@ snippets_df[['subject', 'snippet', 'position']]
 snippets_df.loc[snippets_df['confusingness'] == 'Atom', 'pair_id'] = snippets_df[snippets_df['confusingness'] == 'Atom']['snippet'] + 1
 snippets_df.loc[snippets_df['confusingness'] == 'Transformation', 'pair_id'] = snippets_df[snippets_df['confusingness'] == 'Transformation']['snippet'] - 1
 
-snippets_df.groupby('subject').agg(lambda df: df['pair_position']df['position']))
+#snippets_df.groupby('subject').agg(lambda df: df['pair_position']df['position']))
 
 snippet_pairs_df = pd.merge(snippets_df, snippets_df, left_on=['subject', 'pair_id'], right_on=['subject', 'snippet'], suffixes=('_l', '_r'))[['subject', 'snippet_l', 'snippet_r', 'position_l', 'position_r']]
 
@@ -1093,3 +1093,29 @@ len(joined_text.split())
 # number of paragraphs
 import re
 len(re.findall('^$', joined_text, re.M))
+
+len(all_codes_df)
+len(all_codes_df.groupby('codename').count())
+
+# Median code size
+all_codes_df['text'].map(len).agg('median')
+all_codes_df['text'].map(lambda x: x.count(' ') + 1).agg('median')
+
+#%%############################################################################
+#    Analytical Categories
+###############################################################################
+
+print(all_codes_df.groupby('codename').size().sort_values(ascending=False).to_csv())
+
+all_codes_df[(all_codes_df['codename'] == 'Overconfident')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Language Expectations')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Arithmetic')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Communication')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Combined multiple elements')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Dependency')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Similar To')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Performance Optimization')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Example Problem')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Comment')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Argument Order')]['text'].values
+all_codes_df[(all_codes_df['codename'] == 'Design Concerns')]['text'].values
