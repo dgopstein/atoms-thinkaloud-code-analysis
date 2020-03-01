@@ -318,26 +318,41 @@ years_answers_df['years_experience'] = years_answers_df.apply(lambda row: 2019-r
 
 years_answers_df['subject_group'] = years_answers_df['subject'].map(subject_groups)
 
+import matplotlib.patches as mpatches
 plt.close()
 sns.set(rc={'figure.figsize':(5,5)})
-years_vs_correctness_plot = sns.scatterplot(x='years_experience', y='answer', hue='subject_group', data=years_answers_df, s = 400)
-years_vs_correctness_plot.set(ylim=(0,8.5),
+sns.set_style("whitegrid", {"grid.color": ".90"})#{"grid.linestyle": "dotted"})
+sns.set_palette("Set3")
+cplt = sns.color_palette()
+
+years_vs_correctness_plot = sns.scatterplot(x='years_experience', y='answer', hue='subject_group', data=years_answers_df, s = 600)
+
+years_vs_correctness_plot.set(ylim=(2.5,8.5), xlim=(0, 45),
                               xlabel="Years Programming", ylabel="Correct Answers")
-plt.legend(loc='lower right')
+
+plt.legend(title="Subject Groups", loc='lower right', labels = ['Student', 'C++ User', 'C++ Librarian'],
+           handles = [mpatches.Circle((0.5, 0.5), facecolor=cplt[2]),
+                      mpatches.Circle((0.5, 0.5), facecolor=cplt[1]),
+                      mpatches.Circle((0.5, 0.5), facecolor=cplt[0])]
+)
 
 for idx in range(0,len(years_answers_df)):
     x, y, text = years_answers_df[['years_experience', 'answer', 'subject']].iloc[idx]
     text = int(text)
 
     offsets = {
-        4168: -.8,
-        7640: .8,
-        6061: -.3,
-        8888: .2}
+        4168: -1.2,
+        7640: 0.8,
+        1157: .1,
+        6061: -.6,
+        8888: .5}
 
     x += offsets.get(text, 0)
 
-    years_vs_correctness_plot.text(x, y, text, size=7, color='black', weight='semibold', horizontalalignment='center', verticalalignment='center')
+    years_vs_correctness_plot.text(x, y, text, size=8, color='black', weight='semibold', horizontalalignment='center', verticalalignment='center')
+
+years_vs_correctness_plot
+plt.close()
 
 plt.savefig('img/years_vs_correctness.pdf')
 
@@ -1119,3 +1134,6 @@ all_codes_df[(all_codes_df['codename'] == 'Example Problem')]['text'].values
 all_codes_df[(all_codes_df['codename'] == 'Comment')]['text'].values
 all_codes_df[(all_codes_df['codename'] == 'Argument Order')]['text'].values
 all_codes_df[(all_codes_df['codename'] == 'Design Concerns')]['text'].values
+
+pd.options.display.max_colwidth = 500
+all_codes_df[(all_codes_df['codename'] == 'printf')].sort_index()
