@@ -9,7 +9,11 @@ The information contained in this package falls broadly in to three categories,
 each of which have received their own directory: preparation, interview_instructions,
 and data.
 
-## preparation
+## preparation/
+
+These files were all used in the preparation of the study. They helped defined
+and select which snippets of code would be evaluated, as well as create the
+instruments used in each interview.
 
 * **instrument-0000.pdf**: An example instrument that could have been issued to a
   subject, but was not.
@@ -20,7 +24,7 @@ and data.
   confirmed to contain an atom (HC), has an atom removed (NC), or was
   hypothesized but not confirmed to have an atom removed (HNC).
   * qid: The "Question Identifier", or the number used to represent snippet
-  sample.
+  sample. Also called _snippet\_id_ in other files.
   * source: The C source code of the snippet.
 * **question\_orders.csv**: A CSV listing the orders of snippets shown to
   subjects during each interview, containing two rows:
@@ -32,33 +36,46 @@ and data.
   script, and are defaulted to containing 5 atom-containing snippets, and 1 each
   of all other types of atoms. The output of this file is a csv, of the same
   structure as _questions\_orders.csv_.
-
-### build\_instruments
-
-This directory contains scripts and templates necessary for creating instrument
+* **build\_instruments/**: This directory contains scripts and templates necessary for creating instrument
 pdfs.
+    * **instrument-*.mustache**: [Mustache](http://mustache.github.io/) templates of
+    Latex files used to create instruments. The template is required to substitute
+    in subject-specific information such as their subject\_id and the specific set
+    of snippets assigned to them.
+    * **build\_instrument.rb**: The ruby script that generates instrument pdfs from
+    the templates described above. The Mustache ruby gem must be installed. In
+    order to run, build\_instrument.rb requires a subject\_id and a list of
+    snippet\_id's (sometimes called qid's) to create the pdf. The easiest way to do
+    this is to supply as an argument a _question\_orders.csv_ from the parent
+    directory.
+    * **out/**: A blank directory that will be filled with pdf files after running
+    build\_instrument.rb.
 
-* **instrument-*.mustache**: [Mustache](http://mustache.github.io/) templates of
-  Latex files used to create instruments. The template is required to substitute
-  in subject-specific information such as their subject\_id and the specific set
-  of snippets assigned to them.
-* **build\_instrument.rb**: The ruby script that generates instrument pdfs from
-  the templates described above. The Mustache ruby gem must be installed. In
-  order to run, build\_instrument.rb requires a subject\_id and a list of
-  snippet\_id's (sometimes called qid's) to create the pdf. The easiest way to do
-  this is to supply as an argument a _question\_orders.csv_ from the parent
-  directory.
-* **out/**: A blank directory that will be filled with pdf files after running
-  build\_instrument.rb.
 
+## interview\_instructions/
 
-## interview\_instructions
+These documents were provided to the study leader before every interview to
+serve as a refresher on how to conduct the study.
 
-## data
+* **Preflight-Checklist.pdf**: A checklist of items to bring, and procedures to
+  perform before each interview so condition the study leader to behave as
+  uniformly as possible during the study
+* **Meta-protocol.pdf**: A specific set of instructions about how to behave
+  during the interviews, with high-level recommendations as well as scripts for
+  specific interactions that commonly arise.
 
-### transcripts
+## data/
+### transcripts/
 
-### instruments
+The audio from each interview was transcribed into .txt format. Personally
+identifying information was stripped. The text is annotated with comments in
+square brackets []'s with comments including when new snippets were shown to the
+subject, e.g. [Snippet 1] would indicate that the subject was just shown the
+snippet with ID 1. Other comments include things like [laughter], or [company]
+to indicate non-verbal interactions or personally identifying information,
+respectively.
+
+### instruments/
 
 The raw instruments were originally generated with several pages that were
 removed from the scans included in this package. The pages were removed for
@@ -81,3 +98,19 @@ engaged them in a dialog, they were given a red pen. When viewing the written
 instruments then, black ink indicates thoughts formulated by the participant
 alone, while writing in red ink may be affected by interactions with the study
 leader.
+
+## analysis/
+
+The codes (labels) assigned to the text are found in this directory.
+
+* **code_descriptions.csv**: lists each of the 153 types of codes assigned and a
+brief description of when they are applicable.
+* **codes.csv**: lists the application of each code, columns are:
+  * subject: The ID of the subject, and consequently which transcript, the code
+    is applied to.
+  * start_offset: Where in the document the labeled text begins, counted in
+    number of characters.
+  * end_offset: Where in the document the labeled text ends, counted in number
+    of characters.
+  * code: The name of the label applied
+  * text: The segment of the interview to which the code is applied.
