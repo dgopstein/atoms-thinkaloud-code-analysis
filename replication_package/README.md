@@ -9,11 +9,11 @@ The information contained in this package falls broadly in to three categories,
 each of which have received their own directory: preparation, interview_instructions,
 and data.
 
-## Preparation
+## preparation
 
 * **instrument-0000.pdf**: An example instrument that could have been issued to a
   subject, but was not.
-* **questions_snippets.csv**: A CSV listing every snippet chosen for inclusion in
+* **questions\_snippets.csv**: A CSV listing every snippet chosen for inclusion in
   this study. Includes headers:
   * atom: Which atom of confusion is contained or removed from the snippets.
   * type: Whether the snippet contains an atom (C), was hypothesized but not
@@ -22,14 +22,43 @@ and data.
   * qid: The "Question Identifier", or the number used to represent snippet
   sample.
   * source: The C source code of the snippet.
+* **question\_orders.csv**: A CSV listing the orders of snippets shown to
+  subjects during each interview, containing two rows:
+  * subject\_id: Which subject does this line pertain to
+  * question\_order: A space-separated list of snippet id's. These correspond to the
+    _qid_ column in the above _questions\_snippets.csv_ file.
+* **questions\_orders.rb**: A ruby script for semi-randomly generating instrument
+  orders. The number of each type of snippet is dictated by variables in the
+  script, and are defaulted to containing 5 atom-containing snippets, and 1 each
+  of all other types of atoms. The output of this file is a csv, of the same
+  structure as _questions\_orders.csv_.
 
-## Interview Instructions
+### build\_instruments
 
-## Data
+This directory contains scripts and templates necessary for creating instrument
+pdfs.
 
-### Transcripts
+* **instrument-*.mustache**: [Mustache](http://mustache.github.io/) templates of
+  Latex files used to create instruments. The template is required to substitute
+  in subject-specific information such as their subject\_id and the specific set
+  of snippets assigned to them.
+* **build\_instrument.rb**: The ruby script that generates instrument pdfs from
+  the templates described above. The Mustache ruby gem must be installed. In
+  order to run, build\_instrument.rb requires a subject\_id and a list of
+  snippet\_id's (sometimes called qid's) to create the pdf. The easiest way to do
+  this is to supply as an argument a _question\_orders.csv_ from the parent
+  directory.
+* **out/**: A blank directory that will be filled with pdf files after running
+  build\_instrument.rb.
 
-### Instruments
+
+## interview\_instructions
+
+## data
+
+### transcripts
+
+### instruments
 
 The raw instruments were originally generated with several pages that were
 removed from the scans included in this package. The pages were removed for
