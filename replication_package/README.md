@@ -7,23 +7,23 @@ _Thinking Aloud about Confusing Code: A Qualitative Investigation of Program Com
 
 The information contained in this package falls broadly in to three categories,
 each of which have received their own directory: preparation, interview_instructions,
-and data.
+data, and analysis.
 
 ## preparation/
 
-These files were all used in the preparation of the study. They helped defined
+These files were all used in the preparation of the study. They helped define
 and select which snippets of code would be evaluated, as well as create the
 instruments used in each interview.
 
 * **instrument-0000.pdf**: An example instrument that could have been issued to a
-  subject, but was not.
+  subject.
 * **questions\_snippets.csv**: A CSV listing every snippet chosen for inclusion in
   this study. Includes headers:
   * atom: Which atom of confusion is contained or removed from the snippets.
   * type: Whether the snippet contains an atom (C), was hypothesized but not
   confirmed to contain an atom (HC), has an atom removed (NC), or was
   hypothesized but not confirmed to have an atom removed (HNC).
-  * qid: The "Question Identifier", or the number used to represent snippet
+  * qid: The "question identifier", or the number used to represent snippet
   sample. Also called _snippet\_id_ in other files.
   * source: The C source code of the snippet.
 * **question\_orders.csv**: A CSV listing the orders of snippets shown to
@@ -38,7 +38,7 @@ instruments used in each interview.
   structure as _questions\_orders.csv_.
 * **build\_instruments/**: This directory contains scripts and templates necessary for creating instrument
 pdfs.
-    * **instrument-*.mustache**: [Mustache](http://mustache.github.io/) templates of
+    * **instrument-\*.mustache**: [Mustache](http://mustache.github.io/) templates of
     Latex files used to create instruments. The template is required to substitute
     in subject-specific information such as their subject\_id and the specific set
     of snippets assigned to them.
@@ -58,13 +58,13 @@ These documents were provided to the study leader before every interview to
 serve as a refresher on how to conduct the study.
 
 * **Preflight-Checklist.pdf**: A checklist of items to bring, and procedures to
-  perform before each interview so condition the study leader to behave as
-  uniformly as possible during the study
+  perform before each interview to condition the study leader to behave as
+  uniformly as possible during the study.
 * **Meta-protocol.pdf**: A specific set of instructions about how to behave
   during the interviews, with high-level recommendations as well as scripts for
   specific interactions that commonly arise.
 * **universal\_answer\_key.csv**: The correct outputs for each program sample
-  shown to subjects. It can be useful to review these during an interview just
+  shown to subjects. It can be useful to review these during an interview to
   make sure the study leader doesn't accidentally miss an error from the
   subject.
 
@@ -120,5 +120,5 @@ brief description of when they are applicable.
     number of characters.
   * end_offset: Where in the document the labeled text ends, counted in number
     of characters.
-  * code: The name of the label applied
+  * code: The name of the label applied.
   * text: The segment of the interview to which the code is applied.
