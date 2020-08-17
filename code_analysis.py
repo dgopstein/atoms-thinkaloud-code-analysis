@@ -14,9 +14,9 @@ import pprint
 import numpy as np
 import scipy
 import pandas as pd
-import seaborn as sns
 import matplotlib as mpl
 from matplotlib import pyplot as plt
+import seaborn as sns
 import collections
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
@@ -330,7 +330,7 @@ years_vs_correctness_plot = sns.scatterplot(x='years_experience', y='answer', hu
 years_vs_correctness_plot.set(ylim=(2.5,8.5), xlim=(0, 45),
                               xlabel="Years Programming", ylabel="Correct Answers")
 
-plt.legend(title="Subject Groups", loc='lower right', labels = ['Student', 'C++ User', 'C++ Librarian'],
+plt.legend(title="Subject Groups", loc='lower right', labels = ['Student', 'C++ App. Dev.', 'C++ Librarian'],
            handles = [mpatches.Circle((0.5, 0.5), facecolor=cplt[2]),
                       mpatches.Circle((0.5, 0.5), facecolor=cplt[1]),
                       mpatches.Circle((0.5, 0.5), facecolor=cplt[0])]
@@ -352,7 +352,7 @@ for idx in range(0,len(years_answers_df)):
     years_vs_correctness_plot.text(x, y, text, size=8, color='black', weight='semibold', horizontalalignment='center', verticalalignment='center')
 
 years_vs_correctness_plot
-plt.close()
+#plt.close()
 
 plt.savefig('img/years_vs_correctness.pdf')
 
