@@ -319,21 +319,28 @@ years_answers_df['years_experience'] = years_answers_df.apply(lambda row: 2019-r
 years_answers_df['subject_group'] = years_answers_df['subject'].map(subject_groups)
 
 import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
 plt.close()
 sns.set(rc={'figure.figsize':(5,5)})
 sns.set_style("whitegrid", {"grid.color": ".90"})#{"grid.linestyle": "dotted"})
 sns.set_palette("Set3")
 cplt = sns.color_palette()
 
-years_vs_correctness_plot = sns.scatterplot(x='years_experience', y='answer', hue='subject_group', data=years_answers_df, s = 600)
+mrkrs = ['p', 's', 'o']
+years_vs_correctness_plot = sns.scatterplot(x='years_experience', y='answer', style='subject_group', markers=mrkrs, hue='subject_group', data=years_answers_df, s = 600)
 
 years_vs_correctness_plot.set(ylim=(2.5,8.5), xlim=(0, 45),
                               xlabel="Years Programming", ylabel="Correct Answers")
 
-plt.legend(title="Subject Groups", loc='lower right', labels = ['Student', 'C++ App. Dev.', 'C++ Librarian'],
-           handles = [mpatches.Circle((0.5, 0.5), facecolor=cplt[2]),
-                      mpatches.Circle((0.5, 0.5), facecolor=cplt[1]),
-                      mpatches.Circle((0.5, 0.5), facecolor=cplt[0])]
+mrkrsize=12
+plt.legend(title="Subject Groups", loc='lower right',
+           handles = [mlines.Line2D([], [], color=cplt[2], marker=mrkrs[0], linestyle='None',
+                                    markersize=mrkrsize, label='Student'),
+                      mlines.Line2D([], [], color=cplt[1], marker=mrkrs[1], linestyle='None',
+                                    markersize=mrkrsize, label='C++ App. Dev.'),
+                      mlines.Line2D([], [], color=cplt[0], marker=mrkrs[2], linestyle='None',
+                                    markersize=mrkrsize, label='C++ Librarian')
+                      ]
 )
 
 for idx in range(0,len(years_answers_df)):
