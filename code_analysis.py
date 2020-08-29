@@ -334,11 +334,11 @@ years_vs_correctness_plot.set(ylim=(2.5,8.5), xlim=(0, 45),
 
 mrkrsize=12
 plt.legend(title="Subject Groups", loc='lower right',
-           handles = [mlines.Line2D([], [], color=cplt[2], marker=mrkrs[0], linestyle='None',
+           handles = [mlines.Line2D([], [], color=cplt[2], marker=mrkrs[2], linestyle='None',
                                     markersize=mrkrsize, label='Student'),
                       mlines.Line2D([], [], color=cplt[1], marker=mrkrs[1], linestyle='None',
                                     markersize=mrkrsize, label='C++ App. Dev.'),
-                      mlines.Line2D([], [], color=cplt[0], marker=mrkrs[2], linestyle='None',
+                      mlines.Line2D([], [], color=cplt[0], marker=mrkrs[0], linestyle='None',
                                     markersize=mrkrsize, label='C++ Librarian')
                       ]
 )
